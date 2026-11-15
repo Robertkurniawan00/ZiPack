@@ -45,6 +45,14 @@ class ArchiveEngine:
         candidates.append(os.path.join(base_dir, "bin", "7z.exe"))
         candidates.append(os.path.join(os.path.dirname(base_dir), "bin", "7z.exe"))
 
+        # Fallback to system 64-bit / 32-bit installations or PATH
+        candidates.append(r"C:\Program Files\7-Zip\7z.exe")
+        candidates.append(r"C:\Program Files (x86)\7-Zip\7z.exe")
+        import shutil
+        which_7z = shutil.which("7z") or shutil.which("7z.exe")
+        if which_7z:
+            candidates.append(which_7z)
+
         self.seven_zip_bin = "7z.exe"
         for cand in candidates:
             if cand and os.path.isfile(cand):
@@ -89,28 +97,42 @@ class ArchiveEngine:
                 cmd.append(f"-p{password}")
             proc = subprocess.run(cmd, capture_output=True, text=True, errors="ignore")
             if proc.returncode == 0:
+                def safe_int(v, default=0):
+                    if not v:
+                        return default
+                    try:
+                        return int(v)
+                    except (ValueError, TypeError):
+                        return default
+
+                def add_entry(entry: dict):
+                    if "Path" in entry and entry.get("Path") != archive_path:
+                        is_d = entry.get("Folder", "-") == "+" or entry.get("Attributes", "").startswith("D")
+                        p = entry.get("Path", "")
+                        nm = os.path.basename(p) if not is_d else os.path.basename(p) + "/"
+                        items.append(ArchiveItem(
+                            path=p,
+                            name=nm,
+                            is_dir=is_d,
+                            size=safe_int(entry.get("Size")),
+                            packed_size=safe_int(entry.get("Packed Size")),
+                            mtime=entry.get("Modified", ""),
+                            crc=entry.get("CRC", ""),
+                            attributes=entry.get("Attributes", "")
+                        ))
+
                 cur: dict = {}
                 for line in proc.stdout.splitlines():
                     line = line.strip()
                     if not line:
-                        if "Path" in cur and cur.get("Path") != archive_path:
-                            is_d = cur.get("Folder", "-") == "+" or cur.get("Attributes", "").startswith("D")
-                            p = cur.get("Path", "")
-                            nm = os.path.basename(p) if not is_d else os.path.basename(p) + "/"
-                            items.append(ArchiveItem(
-                                path=p,
-                                name=nm,
-                                is_dir=is_d,
-                                size=int(cur.get("Size", 0)),
-                                packed_size=int(cur.get("Packed Size", 0)),
-                                mtime=cur.get("Modified", ""),
-                                crc=cur.get("CRC", ""),
-                                attributes=cur.get("Attributes", "")
-                            ))
-                        cur = {}
+                        if cur:
+                            add_entry(cur)
+                            cur = {}
                     elif "=" in line:
                         k, v = line.split("=", 1)
                         cur[k.strip()] = v.strip()
+                if cur:
+                    add_entry(cur)
         except Exception:
             pass
 
