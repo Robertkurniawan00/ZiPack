@@ -51,29 +51,7 @@ class ArchiveNameAndParametersDialog(QDialog):
         layout.addLayout(btn_box)
 
 
-class ExtractionPathAndOptionsDialog(QDialog):
-    def __init__(self, parent=None, default_dest="C:\\Temp", default_archive=""):
-        super().__init__(parent)
-        self.setWindowTitle("Extract Archive")
-        self.resize(450, 250)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("Extract to destination:"))
-        self.dest_input = QLineEdit(default_dest)
-        layout.addWidget(self.dest_input)
-
-        self.chk_subfolder = QCheckBox("Extract to subfolder")
-        self.chk_subfolder.setChecked(True)
-        layout.addWidget(self.chk_subfolder)
-
-        btn_box = QHBoxLayout()
-        btn_ok = QPushButton("Extract")
-        btn_ok.clicked.connect(self.accept)
-        btn_cancel = QPushButton("Cancel")
-        btn_cancel.clicked.connect(self.reject)
-        btn_box.addWidget(btn_ok)
-        btn_box.addWidget(btn_cancel)
-        layout.addLayout(btn_box)
+from .dialog_extract import ExtractionPathAndOptionsDialog
 
 
 class InternalViewerDialog(QDialog):

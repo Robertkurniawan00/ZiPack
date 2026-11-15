@@ -314,9 +314,63 @@ class VXArchiveMainWindow(QMainWindow):
         dlg.exec()
 
     def _action_extract(self):
+        archive_path = None
+        selected_items = None
+        if self.current_tab:
+            if self.current_tab.current_archive_path:
+                archive_path = self.current_tab.current_archive_path
+                # Check if specific items are selected in the archive table
+                selected_rows = sorted(set(idx.row() for idx in self.current_tab.table.selectedIndexes()))
+                if selected_rows:
+                    selected_items = []
+                    for row in selected_rows:
+                        item = self.current_tab.table.item(row, 0)
+                        if item:
+                            selected_items.append(item.text().rstrip("/"))
+            else:
+                # User is browsing a folder, check if selected item is an archive
+                selected = self.current_tab.table.selectedItems()
+                if selected:
+                    row = selected[0].row()
+                    name_item = self.current_tab.table.item(row, 0)
+                    if name_item:
+                        candidate = os.path.join(self.current_tab.current_folder_path, name_item.text().rstrip("/"))
+                        if os.path.isfile(candidate):
+                            archive_path = candidate
+
+        # If no archive is currently open or selected, prompt user to select one
+        if not archive_path:
+            start_dir = self.current_tab.current_folder_path if self.current_tab else os.path.expanduser("~")
+            archive_path, _ = QFileDialog.getOpenFileName(
+                self, "Select Archive to Extract", start_dir,
+                "Archive Files (*.zip *.rar *.7z *.tar *.gz *.bz2 *.xz *.iso *.cab *.wim);;All Files (*.*)"
+            )
+            if not archive_path:
+                return
+
+        default_dest = os.path.dirname(os.path.abspath(archive_path)) if archive_path else os.path.expanduser("~\\Downloads")
         from .dialog_extract import ExtractionPathAndOptionsDialog
-        dlg = ExtractionPathAndOptionsDialog(self)
-        dlg.exec()
+        dlg = ExtractionPathAndOptionsDialog(self, default_dest=default_dest, default_archive=archive_path)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            dest_dir = dlg.get_destination_path()
+            pwd = dlg.get_password()
+            try:
+                os.makedirs(dest_dir, exist_ok=True)
+            except Exception as e:
+                QMessageBox.critical(self, "Extraction Error", f"Cannot create destination folder:\n{e}")
+                return
+
+            engine = self.current_tab.engine if self.current_tab else ArchiveEngine()
+            ok, msg = engine.extract_archive(archive_path, dest_dir, password=pwd, items=selected_items)
+            if ok:
+                QMessageBox.information(self, "Extraction Complete", f"Successfully extracted archive to:\n{dest_dir}")
+                if dlg.should_open_folder():
+                    import subprocess
+                    subprocess.Popen(f'explorer "{os.path.normpath(dest_dir)}"')
+                if self.current_tab and not self.current_tab.current_archive_path:
+                    self.current_tab.load_directory(self.current_tab.current_folder_path)
+            else:
+                QMessageBox.critical(self, "Extraction Failed", f"Could not extract archive:\n{msg}")
 
     def _action_view(self):
         if self.current_tab:
