@@ -65,13 +65,7 @@ class ThreatScannerDialog(QDialog):
         layout.addWidget(QLabel("Security Analysis & Threat Report"))
 
 
-class ArchiveRepairDialog(QDialog):
-    def __init__(self, parent=None, initial_archive=""):
-        super().__init__(parent)
-        self.setWindowTitle("Archive Integrity Salvager & Repair")
-        self.resize(480, 260)
-        layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("Reconstruct damaged archive headers"))
+from .dialog_repair import ArchiveRepairDialog
 
 
 class BookmarkHubDialog(QDialog):

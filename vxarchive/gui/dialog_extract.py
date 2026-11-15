@@ -15,7 +15,7 @@ from .icons import IconEngine
 
 
 class ExtractionPathAndOptionsDialog(QDialog):
-    def __init__(self, parent=None, default_dest: str = "C:\\Temp", default_archive: str = ""):
+    def __init__(self, parent=None, default_dest: str = "", default_archive: str = ""):
         super().__init__(parent)
         self.setWindowTitle("Extract Archive - VXArchive")
         self.resize(500, 310)
@@ -23,14 +23,16 @@ class ExtractionPathAndOptionsDialog(QDialog):
 
         self.default_archive = default_archive or ""
         # Determine smart initial destination folder
-        if default_dest and default_dest != "C:\\Temp" and os.path.exists(default_dest):
+        if default_dest and os.path.exists(default_dest) and default_dest.lower() != "c:\\temp":
             initial_dest = default_dest
         elif self.default_archive and os.path.isfile(self.default_archive):
             initial_dest = os.path.dirname(os.path.abspath(self.default_archive))
         elif os.path.exists(os.path.expanduser("~\\Downloads")):
             initial_dest = os.path.expanduser("~\\Downloads")
+        elif os.path.exists(os.path.expanduser("~\\Desktop")):
+            initial_dest = os.path.expanduser("~\\Desktop")
         else:
-            initial_dest = default_dest or os.getcwd()
+            initial_dest = default_dest or os.path.expanduser("~")
 
         self.subfolder_name = ""
         if self.default_archive:

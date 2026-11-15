@@ -353,5 +353,35 @@ class TestVXArchiveGUI(unittest.TestCase):
         self.assertIsInstance(res, bool)
         test_widget.close()
 
+    def test_add_archive_dialog_parameters(self):
+        dlg = ArchiveNameAndParametersDialog(None, files_to_add=[__file__])
+        self.assertIsNotNone(dlg.name_input.text())
+        self.assertEqual(dlg.get_format(), "zip")
+        self.assertTrue(any("General" in dlg.tabs.tabText(i) for i in range(dlg.tabs.count())))
+        dlg.close()
+
+    def test_repair_wizard_dialog(self):
+        dlg = ArchiveRepairDialog(None, initial_archive="damaged_sample.zip")
+        self.assertIsNotNone(dlg.input_src.text())
+        self.assertIsNotNone(dlg.input_out.text())
+        dlg.close()
+
+    def test_breadcrumb_address_bar(self):
+        from vxarchive.gui.tab_page import BreadcrumbAddressBar
+        bar = BreadcrumbAddressBar("C:/Windows/System32")
+        self.assertEqual(bar.text_input.text(), "C:/Windows/System32")
+        bar._toggle_text_mode()
+        self.assertEqual(bar.stack.currentIndex(), 1)
+        bar.close()
+
+    def test_theme_manager_switching(self):
+        from vxarchive.gui.glass_theme import ThemeManager
+        from PyQt6.QtWidgets import QWidget
+        w = QWidget()
+        ThemeManager.apply_theme(w, "dark")
+        ThemeManager.apply_theme(w, "oled")
+        ThemeManager.apply_theme(w, "light")
+        w.close()
+
 if __name__ == "__main__":
     unittest.main()

@@ -18,37 +18,7 @@ from ..core.dedup_analyzer import DuplicateAnalyzer
 from ..core.utils import format_size
 
 
-class ArchiveNameAndParametersDialog(QDialog):
-    def __init__(self, parent=None, default_archive_name="archive.zip", files_to_add=None):
-        super().__init__(parent)
-        self.setWindowTitle("Add to Archive")
-        self.resize(450, 300)
-        self.files_to_add = files_to_add or []
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("Archive name:"))
-        self.name_input = QLineEdit(default_archive_name)
-        layout.addWidget(self.name_input)
-
-        layout.addWidget(QLabel("Archive format:"))
-        self.format_combo = QComboBox()
-        self.format_combo.addItems(["ZIP", "7Z", "TAR"])
-        layout.addWidget(self.format_combo)
-
-        layout.addWidget(QLabel("Compression level:"))
-        self.level_combo = QComboBox()
-        self.level_combo.addItems(["Fast", "Normal", "Maximum", "Ultra"])
-        self.level_combo.setCurrentIndex(1)
-        layout.addWidget(self.level_combo)
-
-        btn_box = QHBoxLayout()
-        btn_ok = QPushButton("OK")
-        btn_ok.clicked.connect(self.accept)
-        btn_cancel = QPushButton("Cancel")
-        btn_cancel.clicked.connect(self.reject)
-        btn_box.addWidget(btn_ok)
-        btn_box.addWidget(btn_cancel)
-        layout.addLayout(btn_box)
+from .dialog_add import ArchiveNameAndParametersDialog
 
 
 from .dialog_extract import ExtractionPathAndOptionsDialog

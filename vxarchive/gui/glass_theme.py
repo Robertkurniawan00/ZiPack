@@ -1,6 +1,7 @@
 """
-Dark glass stylesheet and theme tokens for VXArchive.
+Dark glass, OLED black, and Fluent light stylesheets and theme tokens for VXArchive.
 """
+from PyQt6.QtCore import QSettings
 
 DARK_GLASS_STYLE = """
 QWidget {
@@ -240,6 +241,301 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 }
 """
 
+OLED_BLACK_STYLE = """
+QWidget {
+    background-color: #000000;
+    color: #f1f5f9;
+    font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+}
+
+QMainWindow, QDialog {
+    background-color: #000000;
+}
+
+QMenuBar {
+    background-color: #000000;
+    color: #94a3b8;
+    padding: 3px 6px;
+    border-bottom: 1px solid #1a1a1a;
+    font-size: 12.5px;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 4px 10px;
+    border-radius: 5px;
+}
+
+QMenuBar::item:selected {
+    background-color: #18181b;
+    color: #ffffff;
+}
+
+QMenu {
+    background-color: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 8px;
+    padding: 5px;
+    color: #f4f4f5;
+}
+
+QMenu::item:selected {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+QToolBar {
+    background: #000000;
+    border-bottom: 1px solid #18181b;
+    spacing: 4px;
+    padding: 5px 8px;
+}
+
+QToolButton {
+    background: transparent;
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: #e4e4e7;
+}
+
+QToolButton:hover {
+    background-color: #18181b;
+    color: #ffffff;
+}
+
+QToolButton:checked {
+    background-color: #1e3a8a;
+    border: 1px solid #3b82f6;
+}
+
+QTabWidget::pane {
+    border: 1px solid #18181b;
+    background-color: #000000;
+}
+
+QTabBar::tab {
+    background-color: #09090b;
+    color: #71717a;
+    padding: 7px 16px;
+    border: 1px solid #18181b;
+    border-bottom: none;
+}
+
+QTabBar::tab:selected {
+    background-color: #141416;
+    color: #ffffff;
+    border-bottom: 2px solid #38bdf8;
+}
+
+QPushButton {
+    background-color: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+    padding: 6px 14px;
+    color: #ffffff;
+}
+
+QPushButton:hover {
+    background-color: #18181b;
+    border-color: #3f3f46;
+}
+
+QLineEdit, QComboBox, QSpinBox {
+    background-color: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+    padding: 5px 8px;
+    color: #ffffff;
+}
+
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus {
+    border: 1px solid #38bdf8;
+}
+
+QTableWidget, QTableView, QListWidget {
+    background-color: #000000;
+    border: 1px solid #18181b;
+    selection-background-color: #1e40af;
+    selection-color: #ffffff;
+    alternate-background-color: #050505;
+}
+
+QHeaderView::section {
+    background-color: #09090b;
+    color: #71717a;
+    padding: 7px;
+    border: none;
+    border-bottom: 1px solid #18181b;
+}
+
+QStatusBar {
+    background-color: #000000;
+    color: #52525b;
+    border-top: 1px solid #18181b;
+}
+"""
+
+LIGHT_GLASS_STYLE = """
+QWidget {
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+}
+
+QMainWindow, QDialog {
+    background-color: #f8fafc;
+}
+
+QMenuBar {
+    background-color: #ffffff;
+    color: #334155;
+    padding: 3px 6px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 12.5px;
+}
+
+QMenuBar::item:selected {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+QMenu {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 5px;
+    color: #1e293b;
+}
+
+QMenu::item:selected {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+QToolBar {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    spacing: 4px;
+    padding: 5px 8px;
+}
+
+QToolButton {
+    background: transparent;
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: #334155;
+}
+
+QToolButton:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+QToolButton:checked {
+    background-color: #dbeafe;
+    border: 1px solid #3b82f6;
+    color: #1d4ed8;
+}
+
+QTabWidget::pane {
+    border: 1px solid #e2e8f0;
+    background-color: #ffffff;
+}
+
+QTabBar::tab {
+    background-color: #f1f5f9;
+    color: #64748b;
+    padding: 7px 16px;
+    border: 1px solid #e2e8f0;
+    border-bottom: none;
+}
+
+QTabBar::tab:selected {
+    background-color: #ffffff;
+    color: #0f172a;
+    border-bottom: 2px solid #2563eb;
+}
+
+QPushButton {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 14px;
+    color: #0f172a;
+}
+
+QPushButton:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+QLineEdit, QComboBox, QSpinBox {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 5px 8px;
+    color: #0f172a;
+}
+
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus {
+    border: 1px solid #2563eb;
+}
+
+QTableWidget, QTableView, QListWidget {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    selection-background-color: #2563eb;
+    selection-color: #ffffff;
+    alternate-background-color: #f8fafc;
+}
+
+QHeaderView::section {
+    background-color: #f1f5f9;
+    color: #64748b;
+    padding: 7px;
+    border: none;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+QStatusBar {
+    background-color: #ffffff;
+    color: #64748b;
+    border-top: 1px solid #e2e8f0;
+}
+"""
+
+
+class ThemeManager:
+    """Manages application themes and persistence."""
+    THEMES = {
+        "dark": ("Dark Glass (Fluent Mica)", DARK_GLASS_STYLE),
+        "oled": ("OLED Pure Black", OLED_BLACK_STYLE),
+        "light": ("Fluent Light Glass", LIGHT_GLASS_STYLE)
+    }
+
+    @classmethod
+    def apply_theme(cls, app_or_widget, theme_name: str = "dark"):
+        if theme_name not in cls.THEMES:
+            theme_name = "dark"
+        style = cls.THEMES[theme_name][1]
+        app_or_widget.setStyleSheet(style)
+        try:
+            settings = QSettings("VXArchive", "VXArchive")
+            settings.setValue("theme", theme_name)
+        except Exception:
+            pass
+
+    @classmethod
+    def get_current_theme(cls) -> str:
+        try:
+            settings = QSettings("VXArchive", "VXArchive")
+            t = settings.value("theme", "dark")
+            return t if t in cls.THEMES else "dark"
+        except Exception:
+            return "dark"
+
 
 def apply_dark_glass_theme(app_or_widget):
-    app_or_widget.setStyleSheet(DARK_GLASS_STYLE)
+    ThemeManager.apply_theme(app_or_widget, ThemeManager.get_current_theme())

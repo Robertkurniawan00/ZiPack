@@ -3,17 +3,20 @@ Main multi-tab application window for VXArchive.
 """
 import os
 import sys
+from typing import List, Optional
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QTabWidget, QToolBar, QStatusBar, QFileDialog, QMessageBox
+    QTabWidget, QToolBar, QStatusBar, QFileDialog, QMessageBox,
+    QDialog, QApplication
 )
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtGui import QAction, QIcon, QActionGroup, QDragEnterEvent, QDropEvent
 from PyQt6.QtCore import Qt
 
 from .tab_page import ArchiveTabPage
 from .mica_effect import apply_windows_11_mica
-from .glass_theme import apply_dark_glass_theme
+from .glass_theme import apply_dark_glass_theme, ThemeManager
 from .icons import IconEngine
+from ..core.archive_engine import ArchiveEngine
 
 
 class VXArchiveMainWindow(QMainWindow):
@@ -25,6 +28,7 @@ class VXArchiveMainWindow(QMainWindow):
         # Apply application & window icon
         self._init_window_icon()
 
+        self.setAcceptDrops(True)
         apply_windows_11_mica(self, backdrop_type="mica_alt", dark_mode=True, rounded_corners=True)
         apply_dark_glass_theme(self)
 
@@ -120,6 +124,42 @@ class VXArchiveMainWindow(QMainWindow):
         act_cmd_metadata = QAction("Metadata Inspector...", self)
         act_cmd_metadata.triggered.connect(self._action_metadata)
         cmd_menu.addAction(act_cmd_metadata)
+
+        # --- View Menu ---
+        view_menu = mb.addMenu("&View")
+
+        act_view_refresh = QAction("Refresh", self)
+        act_view_refresh.setShortcut("F5")
+        act_view_refresh.triggered.connect(self._action_refresh)
+        view_menu.addAction(act_view_refresh)
+
+        act_view_quicklook = QAction("QuickLook Preview", self)
+        act_view_quicklook.setShortcut("Space")
+        act_view_quicklook.triggered.connect(self._action_view)
+        view_menu.addAction(act_view_quicklook)
+
+        act_view_edit_path = QAction("Edit Address Bar", self)
+        act_view_edit_path.setShortcut("Ctrl+L")
+        act_view_edit_path.triggered.connect(self._action_edit_address_bar)
+        view_menu.addAction(act_view_edit_path)
+
+        view_menu.addSeparator()
+
+        theme_menu = view_menu.addMenu("Themes & Appearance")
+        self.theme_actions = {}
+        self.theme_group = QActionGroup(self)
+        self.theme_group.setExclusive(True)
+
+        current_theme = ThemeManager.get_current_theme()
+        for key, (label, _) in ThemeManager.THEMES.items():
+            act_theme = QAction(label, self)
+            act_theme.setCheckable(True)
+            if key == current_theme:
+                act_theme.setChecked(True)
+            act_theme.triggered.connect(lambda checked=False, k=key: self._set_theme(k))
+            self.theme_group.addAction(act_theme)
+            theme_menu.addAction(act_theme)
+            self.theme_actions[key] = act_theme
 
         # --- Tools Menu ---
         tools_menu = mb.addMenu("&Tools")
@@ -284,10 +324,94 @@ class VXArchiveMainWindow(QMainWindow):
 
     def add_tab(self, folder_or_archive: str) -> int:
         tab = ArchiveTabPage(folder_or_archive, parent=self)
+        tab.files_dropped.connect(self._handle_files_dropped)
         title = os.path.basename(folder_or_archive) or "Home"
         idx = self.tabs.addTab(tab, title)
         self.tabs.setCurrentIndex(idx)
         return idx
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        urls = event.mimeData().urls()
+        paths = [u.toLocalFile() for u in urls if u.isLocalFile()]
+        paths = [p for p in paths if os.path.exists(p)]
+        if paths:
+            event.acceptProposedAction()
+            self._handle_files_dropped(paths)
+
+    def _handle_files_dropped(self, paths: List[str]):
+        if not paths:
+            return
+
+        archive_exts = (".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".iso", ".cab")
+        if len(paths) == 1 and paths[0].lower().endswith(archive_exts):
+            self.open_path(paths[0])
+            return
+
+        if self.current_tab and self.current_tab.current_archive_path:
+            archive_path = self.current_tab.current_archive_path
+            ret = QMessageBox.question(
+                self, "Add to Archive",
+                f"Add {len(paths)} dropped item(s) to '{os.path.basename(archive_path)}'?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+            if ret == QMessageBox.StandardButton.Yes:
+                ok, msg = self.current_tab.engine.create_archive(archive_path, paths)
+                if ok:
+                    self.current_tab.open_archive(archive_path)
+                else:
+                    QMessageBox.critical(self, "Add Failed", f"Could not add items to archive:\n{msg}")
+            return
+
+        from .dialog_add import ArchiveNameAndParametersDialog
+        dlg = ArchiveNameAndParametersDialog(self, files_to_add=paths)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            out_path = dlg.get_output_path()
+            files = dlg.get_files_to_add()
+            fmt = dlg.get_format()
+            lvl = dlg.get_compression_level()
+            pwd = dlg.get_password()
+            split = dlg.get_split_volume()
+            enc_h = dlg.should_encrypt_headers()
+
+            engine = self.current_tab.engine if self.current_tab else ArchiveEngine()
+            ok, msg = engine.create_archive(
+                out_path, files, archive_format=fmt,
+                password=pwd, compression_level=lvl,
+                split_volume=split, encrypt_headers=enc_h
+            )
+            if ok:
+                ret = QMessageBox.information(
+                    self, "Archive Created",
+                    f"Successfully created archive:\n{out_path}\n\nWould you like to open it in VXArchive?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                )
+                if ret == QMessageBox.StandardButton.Yes:
+                    self.open_path(out_path)
+                elif self.current_tab and not self.current_tab.current_archive_path:
+                    self.current_tab.load_directory(self.current_tab.current_folder_path)
+            else:
+                QMessageBox.critical(self, "Compression Failed", f"Could not create archive:\n{msg}")
+
+    def _set_theme(self, theme_key: str):
+        ThemeManager.apply_theme(QApplication.instance(), theme_key)
+        for k, act in self.theme_actions.items():
+            act.setChecked(k == theme_key)
+
+    def _action_edit_address_bar(self):
+        if self.current_tab and hasattr(self.current_tab, 'breadcrumb_bar'):
+            self.current_tab.breadcrumb_bar._toggle_text_mode()
 
     def close_tab(self, index: int):
         if self.tabs.count() > 1:
@@ -309,9 +433,46 @@ class VXArchiveMainWindow(QMainWindow):
             self.current_tab.go_forward()
 
     def _action_add(self):
+        files_to_add = []
+        if self.current_tab:
+            selected_rows = sorted(set(idx.row() for idx in self.current_tab.table.selectedIndexes()))
+            if selected_rows and not self.current_tab.current_archive_path:
+                for row in selected_rows:
+                    item = self.current_tab.table.item(row, 0)
+                    if item:
+                        p = os.path.join(self.current_tab.current_folder_path, item.text().rstrip("/"))
+                        if os.path.exists(p):
+                            files_to_add.append(p)
+
         from .dialog_add import ArchiveNameAndParametersDialog
-        dlg = ArchiveNameAndParametersDialog(self)
-        dlg.exec()
+        dlg = ArchiveNameAndParametersDialog(self, files_to_add=files_to_add)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            out_path = dlg.get_output_path()
+            files = dlg.get_files_to_add()
+            fmt = dlg.get_format()
+            lvl = dlg.get_compression_level()
+            pwd = dlg.get_password()
+            split = dlg.get_split_volume()
+            enc_h = dlg.should_encrypt_headers()
+
+            engine = self.current_tab.engine if self.current_tab else ArchiveEngine()
+            ok, msg = engine.create_archive(
+                out_path, files, archive_format=fmt,
+                password=pwd, compression_level=lvl,
+                split_volume=split, encrypt_headers=enc_h
+            )
+            if ok:
+                ret = QMessageBox.information(
+                    self, "Archive Created",
+                    f"Successfully created archive:\n{out_path}\n\nWould you like to open it in VXArchive?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                )
+                if ret == QMessageBox.StandardButton.Yes:
+                    self.open_path(out_path)
+                elif self.current_tab and not self.current_tab.current_archive_path:
+                    self.current_tab.load_directory(self.current_tab.current_folder_path)
+            else:
+                QMessageBox.critical(self, "Compression Failed", f"Could not create archive:\n{msg}")
 
     def _action_extract(self):
         archive_path = None
@@ -370,7 +531,15 @@ class VXArchiveMainWindow(QMainWindow):
                 if self.current_tab and not self.current_tab.current_archive_path:
                     self.current_tab.load_directory(self.current_tab.current_folder_path)
             else:
-                QMessageBox.critical(self, "Extraction Failed", f"Could not extract archive:\n{msg}")
+                ret = QMessageBox.warning(
+                    self, "Extraction Failed",
+                    f"Could not extract archive:\n{msg}\n\nThe archive may be damaged or corrupted. Would you like to run the Archive Repair Wizard?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                )
+                if ret == QMessageBox.StandardButton.Yes:
+                    from .dialog_repair import ArchiveRepairDialog
+                    repair_dlg = ArchiveRepairDialog(self, initial_archive=archive_path)
+                    repair_dlg.exec()
 
     def _action_view(self):
         if self.current_tab:

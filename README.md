@@ -6,7 +6,13 @@ A modern, high-performance archive manager, compression suite, and shell integra
 
 ## ⚡ Highlights
 
-- **Smart Password Memory & Pattern Auto-Unlock**: Never re-enter passwords for release series. Remembers passwords per-file and recognizes bracket tags (e.g. `[kuyhaa.me]galaxy.rar` and `[kuyhaa.me] milyway.rar`), domain prefixes, and multi-part sets (`.part*.rar`), auto-unlocking subsequent archives in the background (~15ms).
+- **Smart Password Memory & Pattern Auto-Unlock**: Never re-enter passwords for release series. Remembers passwords per-file and recognizes bracket tags (e.g. `[kuyhaa.me]galaxy.rar` and `[kuyhaa.me] milyway.rar`), domain prefixes, and multi-part sets (`.part*.rar`), auto-unlocking subsequent archives in the background (~15ms) alongside instant in-session caching.
+- **Interactive Breadcrumb Bar & Quick Path Input**: Fluent Windows 11 style address bar featuring clickable path segment buttons and quick manual editing mode (`Ctrl+L` / click edit).
+- **Deep Drag & Drop File Archiving**: Seamlessly drag and drop files and folders anywhere into the window to pack them into fresh archives, drop onto an active archive tab to append items, or drop archives to inspect immediately.
+- **Advanced Archive Creation Dialog**: Full control over output formats (`.zip`, `.7z`, `.tar`), 5 compression levels (Store to Ultra), multi-volume splitting presets (10MB, 100MB, 700MB, 4.3GB DVD, custom sizes), and AES-256 password encryption with header obfuscation.
+- **Corrupt Archive Integrity Salvager & Auto-Repair Wizard**: Recovers valid files from damaged, partially downloaded, or header-broken archives utilizing Fast Header Alignment and Deep Stream Carving techniques.
+- **Dynamic Multi-Theme Engine**: Seamlessly switch between Dark Glass (Fluent Mica), OLED Pure Black, and Fluent Light Glass themes with persistent configuration across restarts.
+- **Smart Extraction Target Selection**: Automated intelligent destination resolution directing outputs to the archive's host directory or user Downloads folder rather than hardcoded temporary locations.
 - **Universal Format Support**: Full support for `.rar`, `.7z`, `.zip`, `.tar`, `.gz`, `.bz2`, `.xz`, `.iso`, `.cab`, `.wim`, `.jar`, `.apk`, and multi-part split volumes.
 - **Windows 11 Native Mica & Dark Mode**: Authentic DWM Mica Alt / Acrylic materials, dark titlebar caption, native rounded window corners, and subtle accent borders via `dwmapi.dll`.
 - **Archive Sanitizer & Smart Layout Optimizer**: Automated detection and removal of cross-platform clutter (macOS `__MACOSX`, `.DS_Store`, Windows `Thumbs.db`, `desktop.ini`, development dependencies `node_modules`, `__pycache__`, `.venv`, and duplicate payloads). Includes anti-mess extraction preventing double `Folder/Folder` nesting and loose desktop flooding.
@@ -162,7 +168,7 @@ python -m unittest test_vxarchive.py test_gui.py
 
 Expected result:
 ```
-Ran 67 tests in ~18s
+Ran 71 tests in ~3s
 OK
 ```
 

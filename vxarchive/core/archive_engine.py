@@ -118,13 +118,17 @@ class ArchiveEngine:
 
     def create_archive(self, output_archive: str, files_to_add: List[str],
                        archive_format: str = "zip", password: Optional[str] = None,
-                       compression_level: int = 5) -> Tuple[bool, str]:
+                       compression_level: int = 5, split_volume: Optional[str] = None,
+                       encrypt_headers: bool = True) -> Tuple[bool, str]:
         os.makedirs(os.path.dirname(os.path.abspath(output_archive)), exist_ok=True)
         fmt = archive_format.lower().lstrip(".")
 
-        if fmt == "zip" and not password:
+        # Use native zipfile when no password and no volume splitting requested
+        if fmt == "zip" and not password and not split_volume:
             try:
-                with zipfile.ZipFile(output_archive, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+                comp_type = zipfile.ZIP_STORED if compression_level == 0 else zipfile.ZIP_DEFLATED
+                comp_kw = {"compresslevel": compression_level} if comp_type == zipfile.ZIP_DEFLATED else {}
+                with zipfile.ZipFile(output_archive, "w", compression=comp_type, **comp_kw) as zf:
                     for item in files_to_add:
                         if os.path.isfile(item):
                             zf.write(item, arcname=os.path.basename(item))
@@ -137,12 +141,17 @@ class ArchiveEngine:
             except Exception as e:
                 return False, str(e)
 
-        # Use 7z CLI for general format or password encryption
+        # Use 7z CLI for general format, volume splitting, or AES-256 password encryption
         try:
             cmd = [self.seven_zip_bin, "a", output_archive]
+            cmd.append(f"-mx={compression_level}")
+            if split_volume:
+                cmd.append(f"-v{split_volume.strip()}")
             if password:
                 cmd.append(f"-p{password}")
-                cmd.append("-mhe=on")  # encrypt headers
+                if (output_archive.lower().endswith(".7z") or fmt == "7z") and encrypt_headers:
+                    cmd.append("-mhe=on")  # Encrypt file names in 7z
+            cmd.append("-y")
             cmd.extend(files_to_add)
             proc = subprocess.run(cmd, capture_output=True, text=True)
             if proc.returncode == 0:

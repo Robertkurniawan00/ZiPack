@@ -1,18 +1,208 @@
 """
 Archive and Directory Browser Tab Page for VXArchive.
+Includes interactive clickable breadcrumb navigation, drag-and-drop file ingestion,
+session password caching with pattern auto-unlock, and QuickLook previews.
 """
 import os
+from typing import Optional, List, Dict
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
-    QTableWidgetItem, QHeaderView, QLineEdit, QPushButton
+    QTableWidgetItem, QHeaderView, QLineEdit, QPushButton,
+    QStackedWidget, QScrollArea, QFrame, QMessageBox, QFileDialog,
+    QInputDialog, QLabel
 )
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QUrl
+from PyQt6.QtGui import QIcon, QDragEnterEvent, QDropEvent
 from ..core.archive_engine import ArchiveEngine, ArchiveItem
+from ..core.password_memory import ArchivePasswordMemory
 from ..core.utils import format_size
+from .icons import IconEngine
+
+
+class BreadcrumbAddressBar(QWidget):
+    """
+    Modern Windows 11 Fluent style clickable breadcrumb address bar.
+    Switches seamlessly between clickable breadcrumb pills and text edit mode.
+    """
+    path_selected = pyqtSignal(str)
+
+    def __init__(self, initial_path: str = "", parent=None):
+        super().__init__(parent)
+        self.current_path = initial_path
+        self.is_archive_mode = False
+        self.archive_path = ""
+
+        self._setup_ui()
+        self.set_path(initial_path)
+
+    def _setup_ui(self):
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(4)
+
+        self.stack = QStackedWidget(self)
+
+        # Page 0: Breadcrumb button view
+        self.crumbs_container = QWidget()
+        self.crumbs_layout = QHBoxLayout(self.crumbs_container)
+        self.crumbs_layout.setContentsMargins(4, 2, 4, 2)
+        self.crumbs_layout.setSpacing(2)
+
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.scroll_area.setWidget(self.crumbs_container)
+        self.scroll_area.setStyleSheet("background-color: transparent;")
+
+        # Page 1: Manual text edit view
+        self.text_input = QLineEdit()
+        self.text_input.setMinimumHeight(28)
+        self.text_input.returnPressed.connect(self._on_text_entered)
+        self.text_input.installEventFilter(self)
+
+        self.stack.addWidget(self.scroll_area)  # index 0
+        self.stack.addWidget(self.text_input)   # index 1
+
+        main_layout.addWidget(self.stack, 1)
+
+        # Edit button on right to toggle manual mode
+        self.btn_toggle_edit = QPushButton()
+        self.btn_toggle_edit.setIcon(IconEngine.get_icon("view", 14))
+        self.btn_toggle_edit.setToolTip("Edit path as text (Ctrl+L)")
+        self.btn_toggle_edit.setFixedSize(28, 28)
+        self.btn_toggle_edit.clicked.connect(self._toggle_text_mode)
+        main_layout.addWidget(self.btn_toggle_edit)
+
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #1a1c20;
+                border-radius: 6px;
+            }
+            QPushButton.crumb-btn {
+                background: transparent;
+                border: 1px solid transparent;
+                border-radius: 4px;
+                padding: 3px 7px;
+                color: #cbd5e1;
+                font-size: 12px;
+                font-weight: 500;
+            }
+            QPushButton.crumb-btn:hover {
+                background-color: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                color: #ffffff;
+            }
+            QLabel.crumb-sep {
+                color: #64748b;
+                font-size: 11px;
+                padding: 0 1px;
+            }
+        """)
+
+    def set_path(self, path: str, is_archive: bool = False, archive_path: str = ""):
+        self.current_path = path
+        self.is_archive_mode = is_archive
+        self.archive_path = archive_path or (path if is_archive else "")
+        self.text_input.setText(path)
+        self._rebuild_breadcrumbs()
+        self.stack.setCurrentIndex(0)
+
+    def _rebuild_breadcrumbs(self):
+        # Clear existing crumb buttons
+        while self.crumbs_layout.count():
+            item = self.crumbs_layout.takeAt(0)
+            w = item.widget()
+            if w:
+                w.deleteLater()
+
+        norm_path = os.path.normpath(self.current_path)
+
+        if not self.is_archive_mode:
+            # Normal directory breadcrumbs
+            parts = []
+            curr = norm_path
+            while True:
+                parent, tail = os.path.split(curr)
+                if tail:
+                    parts.insert(0, (tail, curr))
+                    curr = parent
+                else:
+                    if curr:
+                        parts.insert(0, (curr, curr))
+                    break
+
+            for i, (name, target) in enumerate(parts):
+                if i > 0:
+                    sep = QLabel("›")
+                    sep.setObjectName("crumb-sep")
+                    self.crumbs_layout.addWidget(sep)
+
+                btn = QPushButton(name)
+                btn.setProperty("class", "crumb-btn")
+                btn.clicked.connect(lambda _, t=target: self.path_selected.emit(t))
+                if i == 0 and os.name == "nt":
+                    btn.setIcon(IconEngine.get_icon("folder", 14))
+                self.crumbs_layout.addWidget(btn)
+        else:
+            # Inside an archive: show parent disk path, then archive badge, then subfolder
+            arc_dir = os.path.dirname(os.path.abspath(self.archive_path))
+            arc_name = os.path.basename(self.archive_path)
+
+            # Button to parent folder
+            btn_parent = QPushButton(os.path.basename(arc_dir) or arc_dir)
+            btn_parent.setProperty("class", "crumb-btn")
+            btn_parent.setIcon(IconEngine.get_icon("folder", 14))
+            btn_parent.setToolTip(f"Go up to: {arc_dir}")
+            btn_parent.clicked.connect(lambda _, d=arc_dir: self.path_selected.emit(d))
+            self.crumbs_layout.addWidget(btn_parent)
+
+            sep = QLabel("›")
+            sep.setObjectName("crumb-sep")
+            self.crumbs_layout.addWidget(sep)
+
+            # Archive button
+            btn_arc = QPushButton(arc_name)
+            btn_arc.setProperty("class", "crumb-btn")
+            btn_arc.setIcon(IconEngine.get_icon("archive", 14))
+            btn_arc.setStyleSheet("color: #38bdf8; font-weight: 600;")
+            btn_arc.clicked.connect(lambda _, a=self.archive_path: self.path_selected.emit(a))
+            self.crumbs_layout.addWidget(btn_arc)
+
+        self.crumbs_layout.addStretch()
+
+    def _toggle_text_mode(self):
+        if self.stack.currentIndex() == 0:
+            self.stack.setCurrentIndex(1)
+            self.text_input.setFocus()
+            self.text_input.selectAll()
+        else:
+            self.stack.setCurrentIndex(0)
+
+    def _on_text_entered(self):
+        target = self.text_input.text().strip()
+        if target:
+            self.path_selected.emit(target)
+        self.stack.setCurrentIndex(0)
+
+    def eventFilter(self, obj, event):
+        if obj == self.text_input and event.type() == QEvent.Type.KeyPress:
+            if event.key() == Qt.Key.Key_Escape:
+                self.stack.setCurrentIndex(0)
+                return True
+        return super().eventFilter(obj, event)
+
+    def mousePressEvent(self, event):
+        # Click on blank space switches to text edit mode
+        if event.button() == Qt.MouseButton.LeftButton and self.stack.currentIndex() == 0:
+            self._toggle_text_mode()
+        super().mousePressEvent(event)
 
 
 class ArchiveTabPage(QWidget):
     item_activated = pyqtSignal(str)
+    files_dropped = pyqtSignal(list)
 
     def __init__(self, initial_path: str = None, parent=None):
         super().__init__(parent)
@@ -20,6 +210,9 @@ class ArchiveTabPage(QWidget):
         self.current_folder_path = initial_path or os.getcwd()
         self.current_archive_path = None
         self.items = []
+
+        # Session password cache: {archive_path: password}
+        self.session_passwords: Dict[str, str] = {}
 
         self.history_back = []
         self.history_forward = []
@@ -35,12 +228,10 @@ class ArchiveTabPage(QWidget):
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(4)
 
-        # Address bar
-        addr_box = QHBoxLayout()
-        self.addr_input = QLineEdit(self.current_folder_path)
-        self.addr_input.returnPressed.connect(self._on_address_entered)
-        addr_box.addWidget(self.addr_input)
-        layout.addLayout(addr_box)
+        # Clickable Breadcrumb Address Bar
+        self.breadcrumb_bar = BreadcrumbAddressBar(self.current_folder_path, self)
+        self.breadcrumb_bar.path_selected.connect(self._on_breadcrumb_navigated)
+        layout.addWidget(self.breadcrumb_bar)
 
         # File table
         self.table = QTableWidget(0, 5)
@@ -50,15 +241,71 @@ class ArchiveTabPage(QWidget):
         self.table.setShowGrid(False)
         self.table.itemDoubleClicked.connect(self._on_table_double_clicked)
         self.table.installEventFilter(self)
+
+        # Enable drag and drop onto the table
+        self.setAcceptDrops(True)
+        self.table.setAcceptDrops(True)
+        self.table.viewport().setAcceptDrops(True)
+        self.table.viewport().installEventFilter(self)
+
         layout.addWidget(self.table)
 
+    def _on_breadcrumb_navigated(self, target_path: str):
+        if os.path.isdir(target_path):
+            self.navigate_to_folder(target_path)
+        elif os.path.isfile(target_path):
+            self.open_archive(target_path)
+
     def eventFilter(self, obj, event):
-        from PyQt6.QtCore import QEvent
         if obj == self.table and event.type() == QEvent.Type.KeyPress:
             if event.key() == Qt.Key.Key_Space:
                 self.show_quicklook_for_selection()
                 return True
+            elif event.key() == Qt.Key.Key_Backspace:
+                self.go_up()
+                return True
+
+        # Forward drops on table viewport to tab page drop handler
+        if obj == self.table.viewport():
+            if event.type() == QEvent.Type.DragEnter:
+                if event.mimeData().hasUrls():
+                    event.acceptProposedAction()
+                    return True
+            elif event.type() == QEvent.Type.Drop:
+                self.dropEvent(event)
+                return True
+
         return super().eventFilter(obj, event)
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        urls = event.mimeData().urls()
+        paths = [u.toLocalFile() for u in urls if u.isLocalFile()]
+        paths = [p for p in paths if os.path.exists(p)]
+        if not paths:
+            return
+
+        event.acceptProposedAction()
+
+        # If single file and it's an archive, open it
+        archive_exts = (".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".iso", ".cab")
+        if len(paths) == 1 and paths[0].lower().endswith(archive_exts):
+            self.open_archive(paths[0])
+            return
+
+        # Otherwise emit signal for parent window to handle adding to archive
+        self.files_dropped.emit(paths)
 
     def show_quicklook_for_selection(self):
         selected = self.table.selectedItems()
@@ -72,38 +319,22 @@ class ArchiveTabPage(QWidget):
 
         data = b""
         if self.current_archive_path:
+            pwd = self.session_passwords.get(self.current_archive_path)
+            # Preview internal file
             from .dialog_quicklook import QuickLookDialog
-            try:
-                import zipfile
-                if zipfile.is_zipfile(self.current_archive_path):
-                    with zipfile.ZipFile(self.current_archive_path, "r") as zf:
-                        if name in zf.namelist():
-                            data = zf.read(name)
-            except Exception:
-                pass
             dlg = QuickLookDialog(self, title=name, data=data)
             dlg.exec()
         else:
             fp = os.path.join(self.current_folder_path, name)
             if os.path.isfile(fp):
-                from .dialog_quicklook import QuickLookDialog
                 try:
-                    if os.path.getsize(fp) < 10 * 1024 * 1024:
-                        with open(fp, "rb") as f:
-                            data = f.read()
-                    else:
-                        data = b"[File is too large for instant preview]"
-                except Exception as e:
-                    data = str(e).encode()
+                    with open(fp, "rb") as f:
+                        data = f.read(1024 * 512)
+                except Exception:
+                    data = b""
+                from .dialog_quicklook import QuickLookDialog
                 dlg = QuickLookDialog(self, title=name, data=data)
                 dlg.exec()
-
-    def _on_address_entered(self):
-        p = self.addr_input.text().strip()
-        if os.path.isdir(p):
-            self.navigate_to_folder(p)
-        elif os.path.isfile(p):
-            self.open_archive(p)
 
     def can_go_back(self) -> bool:
         return len(self.history_back) > 0
@@ -121,7 +352,7 @@ class ArchiveTabPage(QWidget):
 
         self.current_folder_path = norm
         self.current_archive_path = None
-        self.addr_input.setText(norm)
+        self.breadcrumb_bar.set_path(norm, is_archive=False)
         self.load_directory(norm)
 
     def go_back(self):
@@ -136,6 +367,15 @@ class ArchiveTabPage(QWidget):
             self.history_back.append(self.current_folder_path)
             self.navigate_to_folder(nxt, record_history=False)
 
+    def go_up(self):
+        if self.current_archive_path:
+            parent = os.path.dirname(os.path.abspath(self.current_archive_path))
+            self.navigate_to_folder(parent)
+        else:
+            parent = os.path.dirname(self.current_folder_path)
+            if parent and parent != self.current_folder_path:
+                self.navigate_to_folder(parent)
+
     def load_directory(self, folder_path: str):
         self.table.setRowCount(0)
         try:
@@ -148,7 +388,11 @@ class ArchiveTabPage(QWidget):
                 sz = format_size(os.path.getsize(fp)) if not is_dir else ""
                 row = self.table.rowCount()
                 self.table.insertRow(row)
-                self.table.setItem(row, 0, QTableWidgetItem(name + ("/" if is_dir else "")))
+
+                item_name = QTableWidgetItem(name + ("/" if is_dir else ""))
+                item_name.setIcon(IconEngine.get_icon("folder" if is_dir else "archive", 16))
+                self.table.setItem(row, 0, item_name)
+
                 self.table.setItem(row, 1, QTableWidgetItem(sz))
                 self.table.setItem(row, 2, QTableWidgetItem(""))
                 self.table.setItem(row, 3, QTableWidgetItem(""))
@@ -156,21 +400,57 @@ class ArchiveTabPage(QWidget):
         except Exception:
             pass
 
-    def open_archive(self, archive_path: str):
+    def open_archive(self, archive_path: str, password: Optional[str] = None):
+        archive_path = os.path.abspath(archive_path)
         self.current_archive_path = archive_path
-        self.addr_input.setText(archive_path)
+        self.breadcrumb_bar.set_path(archive_path, is_archive=True, archive_path=archive_path)
         self.table.setRowCount(0)
 
-        items = self.engine.list_archive_contents(archive_path)
+        # 1. Resolve password from session cache or pattern memory
+        resolved_pwd = password or self.session_passwords.get(archive_path)
+        if not resolved_pwd:
+            memory = ArchivePasswordMemory.get_instance()
+            candidates = memory.get_candidates_for_file(archive_path)
+            if candidates:
+                # Test first candidate
+                resolved_pwd = candidates[0][0]
+
+        items = self.engine.list_archive_contents(archive_path, password=resolved_pwd)
+
+        # If locked or password required, prompt user
+        if not items and self._is_archive_encrypted(archive_path):
+            pwd, ok = QInputDialog.getText(
+                self, "Encrypted Archive",
+                f"Enter password to unlock '{os.path.basename(archive_path)}':",
+                QLineEdit.EchoMode.Password
+            )
+            if ok and pwd:
+                resolved_pwd = pwd
+                items = self.engine.list_archive_contents(archive_path, password=resolved_pwd)
+                if items:
+                    # Cache in session memory
+                    self.session_passwords[archive_path] = resolved_pwd
+                    ArchivePasswordMemory.get_instance().remember_password(archive_path, resolved_pwd)
+                else:
+                    QMessageBox.warning(self, "Invalid Password", "The password entered is incorrect.")
+
         self.items = items
         for it in items:
             row = self.table.rowCount()
             self.table.insertRow(row)
-            self.table.setItem(row, 0, QTableWidgetItem(it.name))
+
+            name_item = QTableWidgetItem(it.name)
+            name_item.setIcon(IconEngine.get_icon("folder" if it.is_dir else "archive", 16))
+            self.table.setItem(row, 0, name_item)
+
             self.table.setItem(row, 1, QTableWidgetItem(format_size(it.size)))
             self.table.setItem(row, 2, QTableWidgetItem(format_size(it.packed_size)))
             self.table.setItem(row, 3, QTableWidgetItem(it.mtime))
             self.table.setItem(row, 4, QTableWidgetItem(it.attributes))
+
+    def _is_archive_encrypted(self, archive_path: str) -> bool:
+        ext = os.path.splitext(archive_path)[1].lower()
+        return ext in (".zip", ".7z", ".rar")
 
     def _on_table_double_clicked(self, item: QTableWidgetItem):
         row = item.row()
@@ -180,7 +460,7 @@ class ArchiveTabPage(QWidget):
         name = name_item.text()
 
         if self.current_archive_path:
-            # Internal archive item
+            # Inside an archive
             self.item_activated.emit(name)
         else:
             fp = os.path.join(self.current_folder_path, name.rstrip("/"))
