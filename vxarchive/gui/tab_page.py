@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
     QTableWidgetItem, QHeaderView, QLineEdit, QPushButton,
     QStackedWidget, QScrollArea, QFrame, QMessageBox, QFileDialog,
-    QInputDialog, QLabel
+    QInputDialog, QLabel, QSizePolicy
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QUrl
 from PyQt6.QtGui import QIcon, QDragEnterEvent, QDropEvent
@@ -28,37 +28,45 @@ class BreadcrumbAddressBar(QWidget):
 
     def __init__(self, initial_path: str = "", parent=None):
         super().__init__(parent)
+        self.setObjectName("breadcrumbAddressBar")
         self.current_path = initial_path
         self.is_archive_mode = False
         self.archive_path = ""
+
+        self.setFixedHeight(34)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         self._setup_ui()
         self.set_path(initial_path)
 
     def _setup_ui(self):
         main_layout = QHBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setContentsMargins(6, 2, 6, 2)
         main_layout.setSpacing(4)
 
         self.stack = QStackedWidget(self)
+        self.stack.setFixedHeight(28)
 
         # Page 0: Breadcrumb button view
         self.crumbs_container = QWidget()
+        self.crumbs_container.setObjectName("crumbsContainer")
         self.crumbs_layout = QHBoxLayout(self.crumbs_container)
-        self.crumbs_layout.setContentsMargins(4, 2, 4, 2)
+        self.crumbs_layout.setContentsMargins(0, 0, 0, 0)
         self.crumbs_layout.setSpacing(2)
+        self.crumbs_layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFixedHeight(28)
         self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll_area.setWidget(self.crumbs_container)
-        self.scroll_area.setStyleSheet("background-color: transparent;")
+        self.scroll_area.setStyleSheet("background: transparent; border: none;")
 
         # Page 1: Manual text edit view
         self.text_input = QLineEdit()
-        self.text_input.setMinimumHeight(28)
+        self.text_input.setFixedHeight(26)
         self.text_input.returnPressed.connect(self._on_text_entered)
         self.text_input.installEventFilter(self)
 
@@ -69,37 +77,12 @@ class BreadcrumbAddressBar(QWidget):
 
         # Edit button on right to toggle manual mode
         self.btn_toggle_edit = QPushButton()
-        self.btn_toggle_edit.setIcon(IconEngine.get_icon("view", 14))
+        self.btn_toggle_edit.setObjectName("btnToggleEdit")
+        self.btn_toggle_edit.setIcon(IconEngine.get_icon("edit", 16))
         self.btn_toggle_edit.setToolTip("Edit path as text (Ctrl+L)")
-        self.btn_toggle_edit.setFixedSize(28, 28)
+        self.btn_toggle_edit.setFixedSize(26, 26)
         self.btn_toggle_edit.clicked.connect(self._toggle_text_mode)
         main_layout.addWidget(self.btn_toggle_edit)
-
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #1a1c20;
-                border-radius: 6px;
-            }
-            QPushButton.crumb-btn {
-                background: transparent;
-                border: 1px solid transparent;
-                border-radius: 4px;
-                padding: 3px 7px;
-                color: #cbd5e1;
-                font-size: 12px;
-                font-weight: 500;
-            }
-            QPushButton.crumb-btn:hover {
-                background-color: rgba(255, 255, 255, 0.08);
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                color: #ffffff;
-            }
-            QLabel.crumb-sep {
-                color: #64748b;
-                font-size: 11px;
-                padding: 0 1px;
-            }
-        """)
 
     def set_path(self, path: str, is_archive: bool = False, archive_path: str = ""):
         self.current_path = path
@@ -225,15 +208,15 @@ class ArchiveTabPage(QWidget):
 
     def _setup_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(6, 6, 6, 6)
+        layout.setSpacing(6)
 
-        # Clickable Breadcrumb Address Bar
+        # Clickable Breadcrumb Address Bar (compact fixed height, stretch 0)
         self.breadcrumb_bar = BreadcrumbAddressBar(self.current_folder_path, self)
         self.breadcrumb_bar.path_selected.connect(self._on_breadcrumb_navigated)
-        layout.addWidget(self.breadcrumb_bar)
+        layout.addWidget(self.breadcrumb_bar, 0)
 
-        # File table
+        # File table (stretch 1, expands to fill entire available space)
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(["Name", "Size", "Packed", "Modified", "Attributes"])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
@@ -248,7 +231,7 @@ class ArchiveTabPage(QWidget):
         self.table.viewport().setAcceptDrops(True)
         self.table.viewport().installEventFilter(self)
 
-        layout.addWidget(self.table)
+        layout.addWidget(self.table, 1)
 
     def _on_breadcrumb_navigated(self, target_path: str):
         if os.path.isdir(target_path):

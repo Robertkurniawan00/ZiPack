@@ -381,6 +381,7 @@ class TestVXArchiveGUI(unittest.TestCase):
         ThemeManager.apply_theme(w, "dark")
         ThemeManager.apply_theme(w, "oled")
         ThemeManager.apply_theme(w, "light")
+        ThemeManager.apply_theme(w, "dark")
         w.close()
 
 if __name__ == "__main__":

@@ -29,8 +29,9 @@ class VXArchiveMainWindow(QMainWindow):
         self._init_window_icon()
 
         self.setAcceptDrops(True)
-        apply_windows_11_mica(self, backdrop_type="mica_alt", dark_mode=True, rounded_corners=True)
-        apply_dark_glass_theme(self)
+        current_theme = ThemeManager.get_current_theme()
+        apply_windows_11_mica(self, backdrop_type="mica_alt", dark_mode=(current_theme != "light"), rounded_corners=True)
+        ThemeManager.apply_theme(self, current_theme)
 
         self._setup_ui(initial_path or os.getcwd())
 
@@ -408,6 +409,7 @@ class VXArchiveMainWindow(QMainWindow):
         ThemeManager.apply_theme(QApplication.instance(), theme_key)
         for k, act in self.theme_actions.items():
             act.setChecked(k == theme_key)
+        apply_windows_11_mica(self, backdrop_type="mica_alt", dark_mode=(theme_key != "light"), rounded_corners=True)
 
     def _action_edit_address_bar(self):
         if self.current_tab and hasattr(self.current_tab, 'breadcrumb_bar'):

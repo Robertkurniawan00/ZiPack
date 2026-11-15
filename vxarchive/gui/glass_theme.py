@@ -45,14 +45,17 @@ QMenu {
     background-color: #1b1c20;
     border: 1px solid #2d313a;
     border-radius: 8px;
-    padding: 5px;
+    padding: 6px;
     color: #e2e8f0;
 }
 
 QMenu::item {
-    padding: 6px 28px 6px 12px;
-    border-radius: 5px;
-    font-size: 12.5px;
+    background-color: transparent;
+    min-width: 190px;
+    padding: 6px 36px 6px 24px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin: 1px 4px;
 }
 
 QMenu::item:selected {
@@ -239,6 +242,56 @@ QScrollBar::handle:vertical:hover {
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0px;
 }
+
+/* --- Breadcrumb Address Bar --- */
+#breadcrumbAddressBar {
+    background-color: #16181d;
+    border: 1px solid #282c35;
+    border-radius: 6px;
+    max-height: 34px;
+}
+
+#breadcrumbAddressBar QPushButton.crumb-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 2px 7px;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+#breadcrumbAddressBar QPushButton.crumb-btn:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+#breadcrumbAddressBar QLabel.crumb-sep {
+    color: #64748b;
+    font-size: 11px;
+    padding: 0 2px;
+}
+
+#breadcrumbAddressBar QLineEdit {
+    background-color: #1a1c22;
+    border: 1px solid #3b82f6;
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: #ffffff;
+    font-size: 12px;
+}
+
+#breadcrumbAddressBar QPushButton#btnToggleEdit {
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+#breadcrumbAddressBar QPushButton#btnToggleEdit:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
 """
 
 OLED_BLACK_STYLE = """
@@ -276,13 +329,32 @@ QMenu {
     background-color: #09090b;
     border: 1px solid #27272a;
     border-radius: 8px;
-    padding: 5px;
+    padding: 6px;
     color: #f4f4f5;
+}
+
+QMenu::item {
+    background-color: transparent;
+    min-width: 190px;
+    padding: 6px 36px 6px 24px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin: 1px 4px;
 }
 
 QMenu::item:selected {
     background-color: #2563eb;
     color: #ffffff;
+}
+
+QMenu::item:disabled {
+    color: #52525b;
+}
+
+QMenu::separator {
+    height: 1px;
+    background-color: #18181b;
+    margin: 4px 8px;
 }
 
 QToolBar {
@@ -374,6 +446,56 @@ QStatusBar {
     color: #52525b;
     border-top: 1px solid #18181b;
 }
+
+/* --- Breadcrumb Address Bar --- */
+#breadcrumbAddressBar {
+    background-color: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+    max-height: 34px;
+}
+
+#breadcrumbAddressBar QPushButton.crumb-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 2px 7px;
+    color: #d4d4d8;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+#breadcrumbAddressBar QPushButton.crumb-btn:hover {
+    background-color: #18181b;
+    border: 1px solid #3f3f46;
+    color: #ffffff;
+}
+
+#breadcrumbAddressBar QLabel.crumb-sep {
+    color: #71717a;
+    font-size: 11px;
+    padding: 0 2px;
+}
+
+#breadcrumbAddressBar QLineEdit {
+    background-color: #09090b;
+    border: 1px solid #38bdf8;
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: #ffffff;
+    font-size: 12px;
+}
+
+#breadcrumbAddressBar QPushButton#btnToggleEdit {
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+#breadcrumbAddressBar QPushButton#btnToggleEdit:hover {
+    background-color: #18181b;
+}
 """
 
 LIGHT_GLASS_STYLE = """
@@ -405,13 +527,32 @@ QMenu {
     background-color: #ffffff;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
-    padding: 5px;
+    padding: 6px;
     color: #1e293b;
+}
+
+QMenu::item {
+    background-color: transparent;
+    min-width: 190px;
+    padding: 6px 36px 6px 24px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin: 1px 4px;
 }
 
 QMenu::item:selected {
     background-color: #2563eb;
     color: #ffffff;
+}
+
+QMenu::item:disabled {
+    color: #94a3b8;
+}
+
+QMenu::separator {
+    height: 1px;
+    background-color: #e2e8f0;
+    margin: 4px 8px;
 }
 
 QToolBar {
@@ -503,6 +644,56 @@ QStatusBar {
     background-color: #ffffff;
     color: #64748b;
     border-top: 1px solid #e2e8f0;
+}
+
+/* --- Breadcrumb Address Bar --- */
+#breadcrumbAddressBar {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    max-height: 34px;
+}
+
+#breadcrumbAddressBar QPushButton.crumb-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 2px 7px;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+#breadcrumbAddressBar QPushButton.crumb-btn:hover {
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+}
+
+#breadcrumbAddressBar QLabel.crumb-sep {
+    color: #94a3b8;
+    font-size: 11px;
+    padding: 0 2px;
+}
+
+#breadcrumbAddressBar QLineEdit {
+    background-color: #ffffff;
+    border: 1px solid #2563eb;
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: #0f172a;
+    font-size: 12px;
+}
+
+#breadcrumbAddressBar QPushButton#btnToggleEdit {
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+#breadcrumbAddressBar QPushButton#btnToggleEdit:hover {
+    background-color: #f1f5f9;
 }
 """
 

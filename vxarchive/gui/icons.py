@@ -215,6 +215,16 @@ class IconEngine:
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawRect(QRectF(11, 7, 2, 10))
 
+        elif n == "edit":
+            # Pencil edit glyph
+            pen = QPen(QColor("#94a3b8"), 1.8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+            painter.setPen(pen)
+            painter.drawLine(5, 19, 9, 19)
+            painter.drawLine(6, 18, 15, 9)
+            painter.drawLine(15, 9, 17, 7)
+            painter.drawLine(17, 7, 19, 9)
+            painter.drawLine(19, 9, 10, 18)
+
         else:
             # File
             path = QPainterPath()
