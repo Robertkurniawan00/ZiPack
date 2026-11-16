@@ -8,6 +8,10 @@ dist/
 build/
 *.egg-info/
 *.egg
+src_native/**/*.exe
+src_native/**/*.dll
+src_native/**/*.obj
+src_native/**/*.o
 
 # Virtual environments
 venv/

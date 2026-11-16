@@ -8,9 +8,9 @@ echo =====================================================================
 echo.
 
 set "REPO_ROOT=%~dp0"
-set "GCC=C:\Users\Roku\AppData\Local\Programs\mingw64\bin\gcc.exe"
-set "GXX=C:\Users\Roku\AppData\Local\Programs\mingw64\bin\g++.exe"
-set "CSC=C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+set "GCC=%LOCALAPPDATA%\Programs\mingw64\bin\gcc.exe"
+set "GXX=%LOCALAPPDATA%\Programs\mingw64\bin\g++.exe"
+set "CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 
 REM 1. Check G++ and GCC
 where g++.exe >nul 2>&1

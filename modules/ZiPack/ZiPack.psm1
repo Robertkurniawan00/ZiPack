@@ -15,9 +15,9 @@ function Get-ZiPackVersion {
         ModuleName    = "ZiPack"
         Version       = "2.0.0"
         Engine        = "PyQt6 / C++ Accelerator / C# CLI / C Win32"
-        NativeAccel   = Test-Path "$PSScriptRoot\..\..\src_native\cpp\zipack_accel.dll"
-        CliTool       = Test-Path "$PSScriptRoot\..\..\src_native\csharp\ZiPackCLI.exe"
-        Win32Launcher = Test-Path "$PSScriptRoot\..\..\src_native\c\ZiPackLauncher.exe"
+        NativeAccel   = (Test-Path "$PSScriptRoot\..\..\zipack\bin\zipack_accel.dll") -or (Test-Path "$PSScriptRoot\..\..\src_native\cpp\zipack_accel.dll")
+        CliTool       = (Test-Path "$PSScriptRoot\..\..\zipack\bin\ZiPackCLI.exe") -or (Test-Path "$PSScriptRoot\..\..\src_native\csharp\ZiPackCLI.exe")
+        Win32Launcher = (Test-Path "$PSScriptRoot\..\..\zipack\bin\ZiPackLauncher.exe") -or (Test-Path "$PSScriptRoot\..\..\src_native\c\ZiPackLauncher.exe")
     }
 }
 
@@ -52,8 +52,12 @@ function Compress-ZiPackArchive {
     }
 
     # Prefer C# CLI if available for maximum speed
-    $cliPath = "$PSScriptRoot\..\..\src_native\csharp\ZiPackCLI.exe"
-    if (Test-Path $cliPath) {
+    $cliCandidates = @(
+        "$PSScriptRoot\..\..\zipack\bin\ZiPackCLI.exe",
+        "$PSScriptRoot\..\..\src_native\csharp\ZiPackCLI.exe"
+    )
+    $cliPath = $cliCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($cliPath) {
         Write-Verbose "Using ZiPack C# CLI accelerator..."
         & $cliPath compress $Destination $Source
         return
@@ -109,8 +113,12 @@ function Expand-ZiPackArchive {
     }
 
     # Prefer C# CLI
-    $cliPath = "$PSScriptRoot\..\..\src_native\csharp\ZiPackCLI.exe"
-    if (Test-Path $cliPath) {
+    $cliCandidates = @(
+        "$PSScriptRoot\..\..\zipack\bin\ZiPackCLI.exe",
+        "$PSScriptRoot\..\..\src_native\csharp\ZiPackCLI.exe"
+    )
+    $cliPath = $cliCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($cliPath) {
         Write-Verbose "Using ZiPack C# CLI accelerator..."
         & $cliPath extract $Path $Destination
         return
@@ -139,8 +147,12 @@ function Test-ZiPackIntegrity {
         return
     }
 
-    $cliPath = "$PSScriptRoot\..\..\src_native\csharp\ZiPackCLI.exe"
-    if (Test-Path $cliPath) {
+    $cliCandidates = @(
+        "$PSScriptRoot\..\..\zipack\bin\ZiPackCLI.exe",
+        "$PSScriptRoot\..\..\src_native\csharp\ZiPackCLI.exe"
+    )
+    $cliPath = $cliCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($cliPath) {
         & $cliPath test $Path
         return
     }

@@ -484,15 +484,15 @@ class TestZiPackSuite(unittest.TestCase):
     def test_feature_11_deep_grep(self):
         grep_zip = os.path.join(self.base_dir, "grep_test.zip")
         with zipfile.ZipFile(grep_zip, "w") as zf:
-            zf.writestr("app/config.py", "DEBUG = True\nAPI_KEY = 'ZIPACK_SECRET_999'\nPORT = 8080\n")
+            zf.writestr("app/config.py", "DEBUG = True\nCONFIG_TAG = 'ZIPACK_SAMPLE_TAG_999'\nPORT = 8080\n")
             zf.writestr("readme.txt", "ZiPack Documentation\nVersion 2.0\n")
 
         engine = ArchiveGrepEngine()
-        matches = engine.search(grep_zip, query="ZIPACK_SECRET_999", is_regex=False)
+        matches = engine.search(grep_zip, query="ZIPACK_SAMPLE_TAG_999", is_regex=False)
         self.assertEqual(len(matches), 1)
         self.assertEqual(matches[0].file_path, "app/config.py")
         self.assertEqual(matches[0].line_number, 2)
-        self.assertIn("ZIPACK_SECRET_999", matches[0].line_content)
+        self.assertIn("ZIPACK_SAMPLE_TAG_999", matches[0].line_content)
 
     def test_feature_12_sfx_builder(self):
         sfx_out = os.path.join(self.base_dir, "standalone_app.exe")
@@ -723,14 +723,18 @@ class TestZiPackSuite(unittest.TestCase):
         repo_root = os.path.dirname(os.path.abspath(__file__))
 
         # 2. Test C# CLI binary exists
-        csharp_cli = os.path.join(repo_root, "src_native", "csharp", "ZiPackCLI.exe")
+        csharp_cli = os.path.join(repo_root, "zipack", "bin", "ZiPackCLI.exe")
         self.assertTrue(os.path.isfile(csharp_cli), f"C# CLI binary not found at {csharp_cli}")
 
         # 3. Test C Win32 Launcher binary exists
-        c_launcher = os.path.join(repo_root, "src_native", "c", "ZiPackLauncher.exe")
+        c_launcher = os.path.join(repo_root, "zipack", "bin", "ZiPackLauncher.exe")
         self.assertTrue(os.path.isfile(c_launcher), f"C Launcher binary not found at {c_launcher}")
 
-        # 4. Test PowerShell Module files exist
+        # 4. Test C++ Accelerator DLL exists
+        cpp_dll = os.path.join(repo_root, "zipack", "bin", "zipack_accel.dll")
+        self.assertTrue(os.path.isfile(cpp_dll), f"C++ Accelerator DLL not found at {cpp_dll}")
+
+        # 5. Test PowerShell Module files exist
         ps_mod = os.path.join(repo_root, "modules", "ZiPack", "ZiPack.psm1")
         self.assertTrue(os.path.isfile(ps_mod), f"PowerShell module not found at {ps_mod}")
 
