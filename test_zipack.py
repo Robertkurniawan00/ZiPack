@@ -703,6 +703,37 @@ class TestVXArchiveProSuite(unittest.TestCase):
         self.assertIsNotNone(found)
         self.assertEqual(found[0], "test_secure_pwd")
 
+    def test_native_multi_language_components(self):
+        from zipack.core.native_accel import NativeAccelerator
+
+        # 1. Test C++ Accelerator
+        self.assertTrue(NativeAccelerator.is_available())
+        ver = NativeAccelerator.get_version()
+        self.assertIn("C++ Accelerator", ver)
+
+        test_data = b"Testing ZiPack Multi-Language Native Acceleration 2026"
+        crc_val = NativeAccelerator.crc32(test_data)
+        import zlib
+        self.assertEqual(crc_val, zlib.crc32(test_data) & 0xFFFFFFFF)
+
+        crc_f, adler_f, sz_f = NativeAccelerator.file_fast_checksum(self.file1)
+        self.assertTrue(sz_f > 0)
+        self.assertTrue(crc_f > 0)
+
+        repo_root = os.path.dirname(os.path.abspath(__file__))
+
+        # 2. Test C# CLI binary exists
+        csharp_cli = os.path.join(repo_root, "src_native", "csharp", "ZiPackCLI.exe")
+        self.assertTrue(os.path.isfile(csharp_cli), f"C# CLI binary not found at {csharp_cli}")
+
+        # 3. Test C Win32 Launcher binary exists
+        c_launcher = os.path.join(repo_root, "src_native", "c", "ZiPackLauncher.exe")
+        self.assertTrue(os.path.isfile(c_launcher), f"C Launcher binary not found at {c_launcher}")
+
+        # 4. Test PowerShell Module files exist
+        ps_mod = os.path.join(repo_root, "modules", "ZiPack", "ZiPack.psm1")
+        self.assertTrue(os.path.isfile(ps_mod), f"PowerShell module not found at {ps_mod}")
+
 if __name__ == "__main__":
     unittest.main()
 

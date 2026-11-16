@@ -32,8 +32,9 @@ A modern, high-performance archive manager, compression suite, and shell integra
 ```
 ZiPack/
 ├── zipack/
-│   ├── bin/                    # Bundled 64-bit 7z binaries (7z.exe, 7z.dll, 7z.sfx)
+│   ├── bin/                    # Bundled 64-bit binaries (7z.exe, zipack_accel.dll, ZiPackCLI.exe, etc.)
 │   ├── core/                   # Core business logic and compression engines
+│   │   ├── native_accel.py     # C++ Native Acceleration ctypes bridge
 │   │   ├── archive_engine.py   # Primary unified archive engine (7z CLI + Python fallback)
 │   │   ├── sanitizer.py        # Archive Sanitizer & Anti-Mess layout resolver
 │   │   ├── health_checker.py   # Archive integrity and CRC32 verification engine
@@ -67,8 +68,23 @@ ZiPack/
 │   │   ├── tab_page.py         # Archive & directory browser tab
 │   │   └── dialog_*.py         # Dedicated modal dialogs
 │   └── main.py                 # Application entry point and CLI handler
+├── src_native/                 # Multi-language native components (C++, C#, C)
+│   ├── cpp/                    # C++ High-Speed Hardware CRC32 & MMF Accelerator (zipack_accel.dll)
+│   │   ├── zipack_accel.h
+│   │   ├── zipack_accel.cpp
+│   │   └── CMakeLists.txt
+│   ├── csharp/                 # C# / .NET Standalone Fast CLI Archiver (ZiPackCLI.exe)
+│   │   ├── Program.cs
+│   │   └── ZiPackCLI.csproj
+│   └── c/                      # Pure C Win32 Single-Instance Silent Launcher (ZiPackLauncher.exe)
+│       └── launcher.c
+├── modules/                    # PowerShell Administration Module
+│   └── ZiPack/
+│       ├── ZiPack.psd1
+│       └── ZiPack.psm1
+├── build_native.bat            # 1-Click native compiler for C++, C#, and C
 ├── dist/                       # Compiled standalone Windows executable distribution
-├── test_zipack.py              # Core engine automated test suite
+├── test_zipack.py              # Core engine & native integration automated test suite
 ├── test_gui.py                 # GUI components automated test suite
 ├── requirements.txt            # Python dependencies
 ├── LICENSE                     # MIT License
@@ -124,6 +140,34 @@ ZiPack supports direct command-line arguments for system context menus and autom
 
 ---
 
+## 🌐 Multi-Language Native Architecture
+
+ZiPack combines the rapid UI capabilities of Python with the raw execution speed and system integration of native compiled languages:
+
+1. **C++ (Native Memory-Mapped Acceleration DLL)**:
+   - **File**: `src_native/cpp/zipack_accel.dll`
+   - **Capability**: Hardware-accelerated CRC-32 IEEE 802.3 and Adler-32 hash calculation with zero-copy Win32 Memory-Mapped File (`CreateFileMappingW` / `MapViewOfFile`) streaming.
+   - **Integration**: Loaded via Python `ctypes` in `zipack.core.native_accel` with pure-Python fallback.
+
+2. **C# (.NET Standalone High-Speed CLI)**:
+   - **File**: `src_native/csharp/ZiPackCLI.exe`
+   - **Capability**: Lightning-fast archive extraction, creation, and integrity verification running directly on the CLR without Python startup overhead.
+
+3. **C (Win32 Single-Instance Silent Launcher)**:
+   - **File**: `src_native/c/ZiPackLauncher.exe`
+   - **Capability**: Pure Win32 API launcher (<70 KB). Employs named mutexes (`Local\ZiPack_SingleInstance_Mutex`) to detect running instances and bring existing windows to foreground without console flickering.
+
+4. **PowerShell (Administrative Automation Module)**:
+   - **Files**: `modules/ZiPack/ZiPack.psd1`, `modules/ZiPack/ZiPack.psm1`
+   - **Cmdlets**: `Compress-ZiPackArchive`, `Expand-ZiPackArchive`, `Test-ZiPackIntegrity`, `Get-ZiPackVersion`.
+
+To recompile all native components in 1-click:
+```cmd
+build_native.bat
+```
+
+---
+
 ## Windows Explorer Shell Integration
 
 Register ZiPack as the default archiver and enable Explorer right-click cascading menus:
@@ -160,15 +204,15 @@ python -c "import shutil; shutil.copy('zipack.ico', 'dist/ZiPack/zipack.ico'); s
 
 ## Testing
 
-The automated test suite verifies 100% of core engines, security validations, and GUI dialogs:
+The automated test suite verifies 100% of core engines, security validations, GUI dialogs, and native multi-language integration:
 
 ```bash
-python -m unittest test_zipack.py test_gui.py
+python -m unittest test_zipack test_gui
 ```
 
 Expected result:
 ```
-Ran 71 tests in ~3s
+Ran 72 tests in ~3s
 OK
 ```
 
