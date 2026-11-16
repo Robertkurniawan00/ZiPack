@@ -115,7 +115,7 @@ class TestVXArchiveGUI(unittest.TestCase):
         dlg.chk_cascaded.setChecked(False)
         self.assertIn("Flat Context Menu", dlg.lbl_preview_content.text())
         dlg.chk_cascaded.setChecked(True)
-        self.assertIn("VXArchive", dlg.lbl_preview_content.text())
+        self.assertIn("ZiPack", dlg.lbl_preview_content.text())
 
         # Test extension selection buttons
         dlg._clear_all_exts()

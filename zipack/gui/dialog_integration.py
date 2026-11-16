@@ -21,12 +21,12 @@ class SystemIntegrationDialog(QDialog):
         # Tab 1: Context Menu
         tab1 = QWidget()
         t1_layout = QVBoxLayout(tab1)
-        self.chk_cascaded = QCheckBox("Cascaded Submenu (Group under VXArchive)")
+        self.chk_cascaded = QCheckBox("Cascaded Submenu (Group under ZiPack)")
         self.chk_cascaded.setChecked(True)
         self.chk_cascaded.toggled.connect(self._on_cascaded_toggled)
         t1_layout.addWidget(self.chk_cascaded)
 
-        self.lbl_preview_content = QLabel("Preview: VXArchive > Extract here | Extract to subfolder | Add...")
+        self.lbl_preview_content = QLabel("Preview: ZiPack > Extract here | Extract to subfolder | Add...")
         t1_layout.addWidget(self.lbl_preview_content)
         self.tabs.addTab(tab1, "Context Menu")
 
@@ -63,7 +63,7 @@ class SystemIntegrationDialog(QDialog):
 
     def _on_cascaded_toggled(self, checked: bool):
         if checked:
-            self.lbl_preview_content.setText("Preview: VXArchive > Extract here | Extract to subfolder | Add...")
+            self.lbl_preview_content.setText("Preview: ZiPack > Extract here | Extract to subfolder | Add...")
         else:
             self.lbl_preview_content.setText("Preview: Flat Context Menu entries")
 

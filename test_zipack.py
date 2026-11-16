@@ -148,16 +148,16 @@ class TestVXArchiveProSuite(unittest.TestCase):
         self.assertIsNone(next((item for item in items_after if item["label"] == "TestKey"), None))
 
     def test_shell_integration_reg_gen(self):
-        reg_file = os.path.join(self.base_dir, "test_vxarchive.reg")
+        reg_file = os.path.join(self.base_dir, "test_zipack.reg")
         ShellIntegration.generate_reg_file(reg_file)
         self.assertTrue(os.path.isfile(reg_file))
         with open(reg_file, "r", encoding="utf-8") as f:
             content = f.read()
         self.assertIn("Windows Registry Editor Version 5.00", content)
-        self.assertIn("VXArchive.DarkGlass.Archive", content)
+        self.assertIn("ZiPack.Archive", content)
         self.assertIn("Extract here", content)
         self.assertIn("Extract to subfolder", content)
-        self.assertIn("Add to archive with VXArchive...", content)
+        self.assertIn("Add to archive with ZiPack...", content)
 
     def test_shell_integration_lifecycle_and_status(self):
         # Test status inspect
@@ -201,9 +201,9 @@ class TestVXArchiveProSuite(unittest.TestCase):
         self.assertIn("shortcut(s)", msg)
 
         # Check that shortcut exists in at least one desktop and start menu
-        has_desk = any(os.path.isfile(os.path.join(d, "VXArchive.lnk")) for d in desktop_dirs)
+        has_desk = any(os.path.isfile(os.path.join(d, "ZiPack.lnk")) for d in desktop_dirs)
         self.assertTrue(has_desk)
-        has_start = any(os.path.isfile(os.path.join(s, "VXArchive.lnk")) for s in start_dirs)
+        has_start = any(os.path.isfile(os.path.join(s, "ZiPack.lnk")) for s in start_dirs)
         self.assertTrue(has_start)
 
     def test_cli_quick_compress_and_extract(self):

@@ -5,7 +5,6 @@ import os
 datas = [
     ('zipack.ico', '.'),
     ('zipack.png', '.'),
-    ('vxarchive.ico', '.'),
     ('zipack/bin', 'bin'),
     ('zipack/bin', 'zipack/bin')
 ]
@@ -47,7 +46,6 @@ hiddenimports = [
     'zipack.gui.dialog_vault',
     'zipack.gui.dialogs_base',
     'zipack.gui.dialogs_pro',
-    'vxarchive',
     'PyQt6.QtCore',
     'PyQt6.QtGui',
     'PyQt6.QtWidgets'

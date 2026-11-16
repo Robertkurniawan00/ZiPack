@@ -1,5 +1,5 @@
 """
-Windows Explorer Shell context menu, cascaded submenus, and file associations.
+Windows Explorer Shell context menu, cascaded submenus, and file associations for ZiPack.
 """
 import os
 import sys
@@ -25,29 +25,24 @@ class ShellIntegration:
     def _get_target_exe() -> Tuple[str, str]:
         # Priority 1: Permanent user AppData installation
         local_app_data = os.environ.get("LOCALAPPDATA") or os.path.expanduser(r"~\AppData\Local")
-        for brand in ["ZiPack", "VXArchive"]:
-            appdata_exe = os.path.join(local_app_data, "Programs", brand, f"{brand}.exe")
-            appdata_ico = os.path.join(local_app_data, "Programs", brand, f"{brand.lower()}.ico")
-            if os.path.isfile(appdata_exe):
-                ico_ref = appdata_ico if os.path.isfile(appdata_ico) else f"{appdata_exe},0"
-                return appdata_exe, ico_ref
+        appdata_exe = os.path.join(local_app_data, "Programs", "ZiPack", "ZiPack.exe")
+        appdata_ico = os.path.join(local_app_data, "Programs", "ZiPack", "zipack.ico")
+        if os.path.isfile(appdata_exe):
+            ico_ref = appdata_ico if os.path.isfile(appdata_ico) else f"{appdata_exe},0"
+            return appdata_exe, ico_ref
 
         # Priority 2: Frozen PyInstaller execution
         if getattr(sys, "frozen", False):
             exe = sys.executable
             ico = os.path.join(os.path.dirname(exe), "zipack.ico")
-            if not os.path.isfile(ico):
-                ico = os.path.join(os.path.dirname(exe), "vxarchive.ico")
             return exe, (ico if os.path.isfile(ico) else f"{exe},0")
 
         # Priority 3: Local build dist or development fallback
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         dist_exe = os.path.join(base_dir, "dist", "ZiPack", "ZiPack.exe")
         ico_file = os.path.join(base_dir, "zipack.ico")
-        if not os.path.isfile(ico_file):
-            ico_file = os.path.join(base_dir, "vxarchive.ico")
         if os.path.isfile(dist_exe):
-            return dist_exe, f"{dist_exe},0"
+            return dist_exe, (ico_file if os.path.isfile(ico_file) else f"{dist_exe},0")
         return sys.executable, (ico_file if os.path.isfile(ico_file) else f"{sys.executable},0")
 
     @staticmethod
@@ -100,6 +95,14 @@ class ShellIntegration:
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, f"{prog_path}\\shell\\open\\command") as kpcmd:
                 winreg.SetValueEx(kpcmd, "", 0, winreg.REG_SZ, f'"{exe_path}" "%1"')
 
+            # Associate extensions
+            for e in exts:
+                ext_key = f"Software\\Classes\\{e}"
+                with winreg.CreateKey(winreg.HKEY_CURRENT_USER, ext_key) as ke:
+                    winreg.SetValueEx(ke, "", 0, winreg.REG_SZ, "ZiPack.Archive")
+                with winreg.CreateKey(winreg.HKEY_CURRENT_USER, f"{ext_key}\\OpenWithProgids") as kop:
+                    winreg.SetValueEx(kop, "ZiPack.Archive", 0, winreg.REG_SZ, "")
+
             # Context Menu on All Files (*\shell\ZiPack)
             file_shell = r"Software\Classes\*\shell\ZiPack"
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, file_shell) as kfs:
@@ -131,16 +134,28 @@ class ShellIntegration:
                 winreg.SetValueEx(kxsc, "", 0, winreg.REG_SZ, f'"{exe_path}" -xd "%1"')
 
             # Context Menu on Directories
-            dir_shell = r"Software\Classes\Directory\shell\VXArchive"
+            dir_shell = r"Software\Classes\Directory\shell\ZiPack"
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, dir_shell) as kds:
-                winreg.SetValueEx(kds, "MUIVerb", 0, winreg.REG_SZ, "VXArchive")
+                winreg.SetValueEx(kds, "MUIVerb", 0, winreg.REG_SZ, "ZiPack")
                 winreg.SetValueEx(kds, "Icon", 0, winreg.REG_SZ, ico_ref)
                 winreg.SetValueEx(kds, "SubCommands", 0, winreg.REG_SZ, "")
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, f"{dir_shell}\\shell\\Add") as kda:
-                winreg.SetValueEx(kda, "MUIVerb", 0, winreg.REG_SZ, "Add to archive with VXArchive...")
+                winreg.SetValueEx(kda, "MUIVerb", 0, winreg.REG_SZ, "Add to archive with ZiPack...")
                 winreg.SetValueEx(kda, "Icon", 0, winreg.REG_SZ, ico_ref)
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, f"{dir_shell}\\shell\\Add\\command") as kdac:
                 winreg.SetValueEx(kdac, "", 0, winreg.REG_SZ, f'"{exe_path}" -az "%1"')
+
+            # Clean any legacy keys if still lingering
+            for old_key in [
+                r"Software\Classes\*\shell\VXArchive",
+                r"Software\Classes\Directory\shell\VXArchive",
+                r"Software\Classes\VXArchive.DarkGlass.Archive",
+                r"Software\Classes\VXArchive.Archive"
+            ]:
+                try:
+                    winreg.DeleteKey(winreg.HKEY_CURRENT_USER, old_key)
+                except Exception:
+                    pass
 
             # Notify shell
             try:
@@ -173,9 +188,15 @@ class ShellIntegration:
                 except Exception:
                     pass
 
-            _del_tree(winreg.HKEY_CURRENT_USER, r"Software\Classes\*\shell\VXArchive")
-            _del_tree(winreg.HKEY_CURRENT_USER, r"Software\Classes\Directory\shell\VXArchive")
+            # Delete ZiPack and legacy VXArchive keys
+            for target in ["ZiPack", "VXArchive"]:
+                _del_tree(winreg.HKEY_CURRENT_USER, f"Software\\Classes\\*\\shell\\{target}")
+                _del_tree(winreg.HKEY_CURRENT_USER, f"Software\\Classes\\Directory\\shell\\{target}")
+                _del_tree(winreg.HKEY_CURRENT_USER, f"Software\\Classes\\Applications\\{target}.exe")
+            
+            _del_tree(winreg.HKEY_CURRENT_USER, r"Software\Classes\ZiPack.Archive")
             _del_tree(winreg.HKEY_CURRENT_USER, r"Software\Classes\VXArchive.DarkGlass.Archive")
+            _del_tree(winreg.HKEY_CURRENT_USER, r"Software\Classes\VXArchive.Archive")
 
             try:
                 ctypes.windll.shell32.SHChangeNotify(0x08000000, 0x2000, None, None)
@@ -189,19 +210,19 @@ class ShellIntegration:
     def generate_reg_file(output_path: str):
         content = (
             "Windows Registry Editor Version 5.00\n\n"
-            "[HKEY_CLASSES_ROOT\\VXArchive.DarkGlass.Archive]\n"
-            "@=\"VXArchive Compressed File\"\n\n"
-            "[HKEY_CLASSES_ROOT\\VXArchive.DarkGlass.Archive\\shell\\open\\command]\n"
-            "@=\"\\\"VXArchive.exe\\\" \\\"%1\\\"\"\n\n"
-            "[HKEY_CLASSES_ROOT\\*\\shell\\VXArchive]\n"
-            "\"MUIVerb\"=\"VXArchive\"\n"
+            "[HKEY_CLASSES_ROOT\\ZiPack.Archive]\n"
+            "@=\"ZiPack Compressed File\"\n\n"
+            "[HKEY_CLASSES_ROOT\\ZiPack.Archive\\shell\\open\\command]\n"
+            "@=\"\\\"ZiPack.exe\\\" \\\"%1\\\"\"\n\n"
+            "[HKEY_CLASSES_ROOT\\*\\shell\\ZiPack]\n"
+            "\"MUIVerb\"=\"ZiPack\"\n"
             "\"SubCommands\"=\"\"\n\n"
-            "[HKEY_CLASSES_ROOT\\*\\shell\\VXArchive\\shell\\ExtractHere]\n"
+            "[HKEY_CLASSES_ROOT\\*\\shell\\ZiPack\\shell\\ExtractHere]\n"
             "\"MUIVerb\"=\"Extract here\"\n\n"
-            "[HKEY_CLASSES_ROOT\\*\\shell\\VXArchive\\shell\\ExtractSubfolder]\n"
+            "[HKEY_CLASSES_ROOT\\*\\shell\\ZiPack\\shell\\ExtractSubfolder]\n"
             "\"MUIVerb\"=\"Extract to subfolder\"\n\n"
-            "[HKEY_CLASSES_ROOT\\*\\shell\\VXArchive\\shell\\Add]\n"
-            "\"MUIVerb\"=\"Add to archive with VXArchive...\"\n"
+            "[HKEY_CLASSES_ROOT\\*\\shell\\ZiPack\\shell\\Add]\n"
+            "\"MUIVerb\"=\"Add to archive with ZiPack...\"\n"
         )
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(content)
@@ -227,27 +248,26 @@ class ShellIntegration:
         try:
             import win32com.client
             shell = win32com.client.Dispatch("WScript.Shell")
-            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            dist_exe = os.path.join(base_dir, "dist", "VXArchive", "VXArchive.exe")
-            if os.path.isfile(dist_exe):
-                exe_target = dist_exe
-                exe_work = os.path.dirname(dist_exe)
-                exe_args = ""
-            else:
-                exe_target = sys.executable.replace("python.exe", "pythonw.exe")
-                exe_work = base_dir
-                exe_args = f'"{os.path.join(base_dir, "vxarchive", "main.py")}"'
+            exe_target, ico_ref = ShellIntegration._get_target_exe()
+            exe_work = os.path.dirname(exe_target) if os.path.isfile(exe_target) else ""
 
             if desktop:
                 for d in ShellIntegration.get_desktop_paths():
                     try:
-                        lnk = os.path.join(d, "VXArchive.lnk")
+                        # Clean old VXArchive.lnk
+                        old_lnk = os.path.join(d, "VXArchive.lnk")
+                        if os.path.exists(old_lnk):
+                            try:
+                                os.remove(old_lnk)
+                            except Exception:
+                                pass
+
+                        lnk = os.path.join(d, "ZiPack.lnk")
                         sc = shell.CreateShortcut(lnk)
                         sc.TargetPath = exe_target
                         sc.WorkingDirectory = exe_work
-                        if exe_args:
-                            sc.Arguments = exe_args
-                        sc.Description = "VXArchive - Modern Archive Manager"
+                        sc.IconLocation = ico_ref
+                        sc.Description = "ZiPack Archive Manager"
                         sc.Save()
                         count += 1
                     except Exception:
@@ -256,13 +276,20 @@ class ShellIntegration:
             if start_menu:
                 for s in ShellIntegration.get_start_menu_paths():
                     try:
-                        lnk = os.path.join(s, "VXArchive.lnk")
+                        # Clean old VXArchive.lnk
+                        old_lnk = os.path.join(s, "VXArchive.lnk")
+                        if os.path.exists(old_lnk):
+                            try:
+                                os.remove(old_lnk)
+                            except Exception:
+                                pass
+
+                        lnk = os.path.join(s, "ZiPack.lnk")
                         sc = shell.CreateShortcut(lnk)
                         sc.TargetPath = exe_target
                         sc.WorkingDirectory = exe_work
-                        if exe_args:
-                            sc.Arguments = exe_args
-                        sc.Description = "VXArchive - Modern Archive Manager"
+                        sc.IconLocation = ico_ref
+                        sc.Description = "ZiPack Archive Manager"
                         sc.Save()
                         count += 1
                     except Exception:
