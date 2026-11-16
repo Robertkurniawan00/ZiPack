@@ -4,7 +4,7 @@ A modern, high-performance archive manager, compression suite, and shell integra
 
 ---
 
-## ⚡ Highlights
+## Highlights
 
 - **Smart Password Memory & Pattern Auto-Unlock**: Never re-enter passwords for release series. Remembers passwords per-file and recognizes bracket tags (e.g. `[kuyhaa.me]galaxy.rar` and `[kuyhaa.me] milyway.rar`), domain prefixes, and multi-part sets (`.part*.rar`), auto-unlocking subsequent archives in the background (~15ms) alongside instant in-session caching.
 - **Interactive Breadcrumb Bar & Quick Path Input**: Fluent Windows 11 style address bar featuring clickable path segment buttons and quick manual editing mode (`Ctrl+L` / click edit).
