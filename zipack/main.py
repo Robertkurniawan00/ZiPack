@@ -1,5 +1,5 @@
 """
-VXArchive main entry point and command-line handler.
+ZiPack main entry point and command-line handler.
 """
 import sys
 import os
@@ -13,7 +13,7 @@ if _cur_dir not in sys.path:
     sys.path.insert(0, _cur_dir)
 
 try:
-    from vxarchive.core.archive_engine import ArchiveEngine
+    from zipack.core.archive_engine import ArchiveEngine
 except ImportError:
     try:
         from core.archive_engine import ArchiveEngine
@@ -63,23 +63,27 @@ def main():
 
     from PyQt6.QtWidgets import QApplication
     try:
-        from vxarchive.gui.main_window import VXArchiveMainWindow
+        from zipack.gui.main_window import ZiPackMainWindow
     except ImportError:
         try:
-            from gui.main_window import VXArchiveMainWindow
+            from gui.main_window import ZiPackMainWindow
         except ImportError:
-            from .gui.main_window import VXArchiveMainWindow
+            from .gui.main_window import ZiPackMainWindow
 
     app = QApplication.instance()
     if not app:
         app = QApplication(sys.argv)
+    app.setApplicationName("ZiPack")
 
     from PyQt6.QtGui import QIcon
     icon_candidates = [
+        os.path.join(_parent_dir, "zipack.ico"),
+        os.path.join(_cur_dir, "zipack.ico"),
+        os.path.join(getattr(sys, "_MEIPASS", ""), "zipack.ico") if getattr(sys, "frozen", False) else "",
+        os.path.join(os.path.dirname(sys.executable), "zipack.ico") if getattr(sys, "frozen", False) else "",
+        "zipack.ico",
         os.path.join(_parent_dir, "vxarchive.ico"),
         os.path.join(_cur_dir, "vxarchive.ico"),
-        os.path.join(getattr(sys, "_MEIPASS", ""), "vxarchive.ico") if getattr(sys, "frozen", False) else "",
-        os.path.join(os.path.dirname(sys.executable), "vxarchive.ico") if getattr(sys, "frozen", False) else "",
         "vxarchive.ico"
     ]
     for ic in icon_candidates:
@@ -87,7 +91,7 @@ def main():
             app.setWindowIcon(QIcon(ic))
             break
 
-    window = VXArchiveMainWindow()
+    window = ZiPackMainWindow()
     if len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
         window.open_path(sys.argv[1])
     window.show()

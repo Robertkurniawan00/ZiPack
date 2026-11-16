@@ -713,7 +713,7 @@ class ThemeManager:
         style = cls.THEMES[theme_name][1]
         app_or_widget.setStyleSheet(style)
         try:
-            settings = QSettings("VXArchive", "VXArchive")
+            settings = QSettings("ZiPack", "ZiPack")
             settings.setValue("theme", theme_name)
         except Exception:
             pass
@@ -721,8 +721,11 @@ class ThemeManager:
     @classmethod
     def get_current_theme(cls) -> str:
         try:
-            settings = QSettings("VXArchive", "VXArchive")
-            t = settings.value("theme", "dark")
+            settings = QSettings("ZiPack", "ZiPack")
+            t = settings.value("theme", None)
+            if not t:
+                # Check legacy setting
+                t = QSettings("VXArchive", "VXArchive").value("theme", "dark")
             return t if t in cls.THEMES else "dark"
         except Exception:
             return "dark"

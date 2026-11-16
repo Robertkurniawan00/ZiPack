@@ -18,45 +18,45 @@ app = QApplication.instance()
 if not app:
     app = QApplication(sys.argv)
 
-from vxarchive.gui.main_window import VXArchiveMainWindow
-from vxarchive.gui.dialog_add import ArchiveNameAndParametersDialog
-from vxarchive.gui.dialog_extract import ExtractionPathAndOptionsDialog
-from vxarchive.gui.dialog_view import InternalViewerDialog
-from vxarchive.gui.dialog_info import ArchiveInfoDialog
-from vxarchive.gui.dialog_benchmark import BenchmarkDialog
-from vxarchive.gui.dialog_about import AboutVXArchiveDialog
-from vxarchive.gui.dialog_eval import EvaluationDialog
-from vxarchive.gui.dialog_find import FindFilesDialog
-from vxarchive.gui.dialog_wizard import WizardDialog
-from vxarchive.gui.dialog_password import PasswordDialog
-from vxarchive.gui.dialog_progress import VXArchiveProgressDialog
-from vxarchive.gui.dialog_hash import HashInspectorDialog
-from vxarchive.gui.dialog_duplicates import DuplicateAnalyzerDialog
-from vxarchive.gui.dialog_batch import BatchManagerDialog
-from vxarchive.gui.dialog_quicklook import QuickLookDialog
-from vxarchive.gui.dialog_chart import StorageChartDialog
-from vxarchive.gui.dialog_vault import PasswordVaultDialog, PasswordEntryDialog
-from vxarchive.gui.dialog_integration import SystemIntegrationDialog
+from zipack.gui.main_window import VXArchiveMainWindow
+from zipack.gui.dialog_add import ArchiveNameAndParametersDialog
+from zipack.gui.dialog_extract import ExtractionPathAndOptionsDialog
+from zipack.gui.dialog_view import InternalViewerDialog
+from zipack.gui.dialog_info import ArchiveInfoDialog
+from zipack.gui.dialog_benchmark import BenchmarkDialog
+from zipack.gui.dialog_about import AboutVXArchiveDialog
+from zipack.gui.dialog_eval import EvaluationDialog
+from zipack.gui.dialog_find import FindFilesDialog
+from zipack.gui.dialog_wizard import WizardDialog
+from zipack.gui.dialog_password import PasswordDialog
+from zipack.gui.dialog_progress import VXArchiveProgressDialog
+from zipack.gui.dialog_hash import HashInspectorDialog
+from zipack.gui.dialog_duplicates import DuplicateAnalyzerDialog
+from zipack.gui.dialog_batch import BatchManagerDialog
+from zipack.gui.dialog_quicklook import QuickLookDialog
+from zipack.gui.dialog_chart import StorageChartDialog
+from zipack.gui.dialog_vault import PasswordVaultDialog, PasswordEntryDialog
+from zipack.gui.dialog_integration import SystemIntegrationDialog
 
 # 10 Pro Dialogs
-from vxarchive.gui.dialog_shredder import ShredderDialog
-from vxarchive.gui.dialog_transcoder import TranscoderDialog
-from vxarchive.gui.dialog_steganography import SteganographyDialog
-from vxarchive.gui.dialog_diff_sync import DiffSyncDialog
-from vxarchive.gui.dialog_splitter import VolumeSplitterDialog
-from vxarchive.gui.dialog_threat_scanner import ThreatScannerDialog
-from vxarchive.gui.dialog_repair import ArchiveRepairDialog
-from vxarchive.gui.dialog_bookmarks import BookmarkHubDialog
-from vxarchive.gui.dialog_iso import IsoMounterDialog
-from vxarchive.gui.dialog_metadata import MetadataInspectorDialog
+from zipack.gui.dialog_shredder import ShredderDialog
+from zipack.gui.dialog_transcoder import TranscoderDialog
+from zipack.gui.dialog_steganography import SteganographyDialog
+from zipack.gui.dialog_diff_sync import DiffSyncDialog
+from zipack.gui.dialog_splitter import VolumeSplitterDialog
+from zipack.gui.dialog_threat_scanner import ThreatScannerDialog
+from zipack.gui.dialog_repair import ArchiveRepairDialog
+from zipack.gui.dialog_bookmarks import BookmarkHubDialog
+from zipack.gui.dialog_iso import IsoMounterDialog
+from zipack.gui.dialog_metadata import MetadataInspectorDialog
 
 # 3 New Dialogs
-from vxarchive.gui.dialog_grep import DeepGrepDialog
-from vxarchive.gui.dialog_sfx import SFXStudioDialog
-from vxarchive.gui.dialog_lan_share import LANShareDialog
-from vxarchive.gui.dialog_missing_volume import MissingVolumeDialog
-from vxarchive.gui.dialog_sanitizer import ArchiveSanitizerDialog
-from vxarchive.gui.mica_effect import apply_windows_11_mica
+from zipack.gui.dialog_grep import DeepGrepDialog
+from zipack.gui.dialog_sfx import SFXStudioDialog
+from zipack.gui.dialog_lan_share import LANShareDialog
+from zipack.gui.dialog_missing_volume import MissingVolumeDialog
+from zipack.gui.dialog_sanitizer import ArchiveSanitizerDialog
+from zipack.gui.mica_effect import apply_windows_11_mica
 
 class TestVXArchiveGUI(unittest.TestCase):
     def test_main_window_and_tabs(self):
@@ -294,7 +294,7 @@ class TestVXArchiveGUI(unittest.TestCase):
         dlg.close()
 
     def test_dialog_health(self):
-        from vxarchive.gui.dialog_health import ArchiveHealthDialog
+        from zipack.gui.dialog_health import ArchiveHealthDialog
         dlg = ArchiveHealthDialog(None, archive_path="")
         self.assertIsNotNone(dlg)
         self.assertIsNotNone(dlg.table)
@@ -302,7 +302,7 @@ class TestVXArchiveGUI(unittest.TestCase):
         dlg.close()
 
     def test_dialog_diagnostic(self):
-        from vxarchive.gui.dialog_diagnostic import ExtractionDiagnosticDialog
+        from zipack.gui.dialog_diagnostic import ExtractionDiagnosticDialog
         dlg = ExtractionDiagnosticDialog(
             None,
             archive_path="Bully.7z",
@@ -367,7 +367,7 @@ class TestVXArchiveGUI(unittest.TestCase):
         dlg.close()
 
     def test_breadcrumb_address_bar(self):
-        from vxarchive.gui.tab_page import BreadcrumbAddressBar
+        from zipack.gui.tab_page import BreadcrumbAddressBar
         bar = BreadcrumbAddressBar("C:/Windows/System32")
         self.assertEqual(bar.text_input.text(), "C:/Windows/System32")
         bar._toggle_text_mode()
@@ -375,7 +375,7 @@ class TestVXArchiveGUI(unittest.TestCase):
         bar.close()
 
     def test_theme_manager_switching(self):
-        from vxarchive.gui.glass_theme import ThemeManager
+        from zipack.gui.glass_theme import ThemeManager
         from PyQt6.QtWidgets import QWidget
         w = QWidget()
         ThemeManager.apply_theme(w, "dark")

@@ -17,7 +17,7 @@ from .icons import IconEngine
 class ExtractionPathAndOptionsDialog(QDialog):
     def __init__(self, parent=None, default_dest: str = "", default_archive: str = ""):
         super().__init__(parent)
-        self.setWindowTitle("Extract Archive - VXArchive")
+        self.setWindowTitle("Extract Archive - ZiPack")
         self.resize(500, 310)
         self.setMinimumWidth(460)
 

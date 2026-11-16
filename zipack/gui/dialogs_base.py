@@ -98,7 +98,7 @@ class BenchmarkDialog(QDialog):
 class AboutVXArchiveDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("About VXArchive")
+        self.setWindowTitle("About ZiPack")
         self.resize(400, 260)
 
         layout = QVBoxLayout(self)
@@ -109,10 +109,13 @@ class AboutVXArchiveDialog(QDialog):
         ico_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         for cand in [
+            os.path.join(base_dir, "zipack.ico"),
+            os.path.join(os.path.dirname(base_dir), "zipack.ico"),
+            os.path.join(getattr(sys, "_MEIPASS", ""), "zipack.ico") if getattr(sys, "frozen", False) else "",
+            os.path.join(os.path.dirname(sys.executable), "zipack.ico") if getattr(sys, "frozen", False) else "",
+            "zipack.ico",
             os.path.join(base_dir, "vxarchive.ico"),
             os.path.join(os.path.dirname(base_dir), "vxarchive.ico"),
-            os.path.join(getattr(sys, "_MEIPASS", ""), "vxarchive.ico") if getattr(sys, "frozen", False) else "",
-            os.path.join(os.path.dirname(sys.executable), "vxarchive.ico") if getattr(sys, "frozen", False) else "",
             "vxarchive.ico"
         ]:
             if cand and os.path.isfile(cand):
@@ -122,18 +125,21 @@ class AboutVXArchiveDialog(QDialog):
                 break
         layout.addWidget(ico_label)
 
-        lbl = QLabel("<h2>VXArchive</h2><p style='color: #94a3b8;'>Archive Manager</p><p>Version 2.0 (Windows 11 Edition)</p>")
+        lbl = QLabel("<h2>ZiPack</h2><p style='color: #38bdf8; font-weight: 600;'>Next-Gen Archive Manager</p><p>Version 2.5 (Windows 11 Fluent Edition)</p>")
         lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(lbl)
+
+
+AboutZiPackDialog = AboutVXArchiveDialog
 
 
 class EvaluationDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("VXArchive Evaluation")
+        self.setWindowTitle("ZiPack Evaluation")
         self.resize(360, 180)
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("Thank you for using VXArchive!"))
+        layout.addWidget(QLabel("Thank you for using ZiPack!"))
 
 
 class FindFilesDialog(QDialog):

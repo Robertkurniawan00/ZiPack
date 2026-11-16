@@ -1,4 +1,4 @@
-# VXArchive
+# ZiPack
 
 A modern, high-performance archive manager, compression suite, and shell integration for Windows 10 and 11. Built with PyQt6 and native Windows 11 Desktop Window Manager (DWM) hardware-accelerated Mica materials.
 
@@ -30,8 +30,8 @@ A modern, high-performance archive manager, compression suite, and shell integra
 ## Architecture Overview
 
 ```
-VXArchive/
-├── vxarchive/
+ZiPack/
+├── zipack/
 │   ├── bin/                    # Bundled 64-bit 7z binaries (7z.exe, 7z.dll, 7z.sfx)
 │   ├── core/                   # Core business logic and compression engines
 │   │   ├── archive_engine.py   # Primary unified archive engine (7z CLI + Python fallback)
@@ -68,11 +68,11 @@ VXArchive/
 │   │   └── dialog_*.py         # Dedicated modal dialogs
 │   └── main.py                 # Application entry point and CLI handler
 ├── dist/                       # Compiled standalone Windows executable distribution
-├── test_vxarchive.py           # Core engine automated test suite
+├── test_zipack.py              # Core engine automated test suite
 ├── test_gui.py                 # GUI components automated test suite
 ├── requirements.txt            # Python dependencies
 ├── LICENSE                     # MIT License
-└── VXArchive.spec              # PyInstaller build specification
+└── Zipack.spec                 # PyInstaller build specification
 ```
 
 ---
@@ -89,7 +89,7 @@ VXArchive/
 
 1. Clone or download the repository:
    ```bash
-   git clone https://github.com/username/VXArchive.git
+   git clone https://github.com/Robertkurniawan00/VXArchive.git
    cd VXArchive
    ```
 
@@ -100,41 +100,41 @@ VXArchive/
 
 3. Launch the application:
    ```bash
-   python vxarchive/main.py
+   python zipack/main.py
    ```
-   Or double-click `run_vxarchive.bat`.
+   Or double-click `run_zipack.bat`.
 
 ---
 
 ## Command Line Interface (CLI)
 
-VXArchive supports direct command-line arguments for system context menus and automation:
+ZiPack supports direct command-line arguments for system context menus and automation:
 
 | Command | Action |
 |---|---|
-| `VXArchive.exe <path>` | Opens archive or directory in a new browser tab |
-| `VXArchive.exe -xs <archive>` | **Smart Extract (Sanitized)**: Auto-resolves nested folders and strips OS ghosts |
-| `VXArchive.exe -x <archive>` | Extracts archive contents to current folder |
-| `VXArchive.exe -xd <archive>` | Extracts archive contents into a named subfolder |
-| `VXArchive.exe -e <archive>` | Opens interactive extraction destination dialog |
-| `VXArchive.exe -a <target>` | Opens Add to Archive dialog |
-| `VXArchive.exe -az <target>` | 1-Click quick compression to `.zip` |
-| `VXArchive.exe -a7 <target>` | 1-Click high compression to `.7z` |
-| `VXArchive.exe -sanitize <archive>` | Opens the Archive Sanitizer dialog |
+| `ZiPack.exe <path>` | Opens archive or directory in a new browser tab |
+| `ZiPack.exe -xs <archive>` | **Smart Extract (Sanitized)**: Auto-resolves nested folders and strips OS ghosts |
+| `ZiPack.exe -x <archive>` | Extracts archive contents to current folder |
+| `ZiPack.exe -xd <archive>` | Extracts archive contents into a named subfolder |
+| `ZiPack.exe -e <archive>` | Opens interactive extraction destination dialog |
+| `ZiPack.exe -a <target>` | Opens Add to Archive dialog |
+| `ZiPack.exe -az <target>` | 1-Click quick compression to `.zip` |
+| `ZiPack.exe -a7 <target>` | 1-Click high compression to `.7z` |
+| `ZiPack.exe -sanitize <archive>` | Opens the Archive Sanitizer dialog |
 
 ---
 
 ## Windows Explorer Shell Integration
 
-Register VXArchive as the default archiver and enable Explorer right-click cascading menus:
+Register ZiPack as the default archiver and enable Explorer right-click cascading menus:
 
-1. Open **Tools > System Integration & File Associations...** inside VXArchive.
+1. Open **Tools > System Integration & File Associations...** inside ZiPack.
 2. Select your desired file extensions and context menu entries.
 3. Click **Apply Default Integration**.
 
 Alternatively, run:
 ```cmd
-Apply_VXArchive_Integration.bat
+Apply_Zipack_Integration.bat
 ```
 To remove integration cleanly at any time, run:
 ```cmd
@@ -145,15 +145,15 @@ Remove_System_Integration.bat
 
 ## Building Standalone Executable
 
-To compile a standalone binary (`dist/VXArchive/VXArchive.exe`) with PyInstaller:
+To compile a standalone binary (`dist/ZiPack/ZiPack.exe`) with PyInstaller:
 
 ```bash
-pyinstaller VXArchive.spec --noconfirm
+pyinstaller Zipack.spec --noconfirm
 ```
 
-Then copy required assets into `dist/VXArchive`:
+Then copy required assets into `dist/ZiPack`:
 ```bash
-python -c "import shutil; shutil.copy('vxarchive.ico', 'dist/VXArchive/vxarchive.ico'); shutil.copytree('vxarchive/bin', 'dist/VXArchive/bin', dirs_exist_ok=True)"
+python -c "import shutil; shutil.copy('zipack.ico', 'dist/ZiPack/zipack.ico'); shutil.copy('zipack.png', 'dist/ZiPack/zipack.png'); shutil.copytree('zipack/bin', 'dist/ZiPack/bin', dirs_exist_ok=True)"
 ```
 
 ---
@@ -163,7 +163,7 @@ python -c "import shutil; shutil.copy('vxarchive.ico', 'dist/VXArchive/vxarchive
 The automated test suite verifies 100% of core engines, security validations, and GUI dialogs:
 
 ```bash
-python -m unittest test_vxarchive.py test_gui.py
+python -m unittest test_zipack.py test_gui.py
 ```
 
 Expected result:
@@ -177,7 +177,7 @@ OK
 ## Security & Privacy
 
 - **Zip Slip Defense**: Path traversal attacks (e.g. `../../evil.exe`) are actively blocked during extraction.
-- **Local Configuration**: Passwords and bookmarks are stored in `%APPDATA%\VXArchive` on the local machine and never transmitted externally.
+- **Local Configuration**: Passwords and bookmarks are stored in `%APPDATA%\ZiPack` on the local machine and never transmitted externally.
 - **DoD Shredder**: Passes 3 random and complement data sweeps before unlinking disk allocation blocks.
 - **Decompression Bomb Guard**: Warns before decompressing files with abnormal compression ratios.
 

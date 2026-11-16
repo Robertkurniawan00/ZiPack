@@ -36,10 +36,13 @@ class ArchiveEngine:
             meipass = getattr(sys, "_MEIPASS", "")
             if meipass:
                 candidates.append(os.path.join(meipass, "bin", "7z.exe"))
+                candidates.append(os.path.join(meipass, "zipack", "bin", "7z.exe"))
                 candidates.append(os.path.join(meipass, "vxarchive", "bin", "7z.exe"))
             exe_dir = os.path.dirname(sys.executable)
             candidates.append(os.path.join(exe_dir, "bin", "7z.exe"))
+            candidates.append(os.path.join(exe_dir, "zipack", "bin", "7z.exe"))
             candidates.append(os.path.join(exe_dir, "_internal", "bin", "7z.exe"))
+            candidates.append(os.path.join(exe_dir, "_internal", "zipack", "bin", "7z.exe"))
 
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         candidates.append(os.path.join(base_dir, "bin", "7z.exe"))

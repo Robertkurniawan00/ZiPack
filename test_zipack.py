@@ -24,32 +24,32 @@ app = QApplication.instance()
 if not app:
     app = QApplication(sys.argv)
 
-from vxarchive.core.archive_engine import ArchiveEngine, ArchiveItem
-from vxarchive.core.license_manager import LicenseManager
-from vxarchive.core.benchmark import VXArchiveBenchmark
-from vxarchive.core.hasher import HashEngine
-from vxarchive.core.dedup_analyzer import DuplicateAnalyzer
-from vxarchive.core.batch_processor import BatchProcessor
-from vxarchive.core.password_vault import PasswordVault
-from vxarchive.core.shell_integration import ShellIntegration
+from zipack.core.archive_engine import ArchiveEngine, ArchiveItem
+from zipack.core.license_manager import LicenseManager
+from zipack.core.benchmark import VXArchiveBenchmark
+from zipack.core.hasher import HashEngine
+from zipack.core.dedup_analyzer import DuplicateAnalyzer
+from zipack.core.batch_processor import BatchProcessor
+from zipack.core.password_vault import PasswordVault
+from zipack.core.shell_integration import ShellIntegration
 
 # 10 New Pro Engines
-from vxarchive.core.shredder import SecureShredder
-from vxarchive.core.transcoder import ArchiveTranscoder
-from vxarchive.core.steganography import ArchiveSteganography
-from vxarchive.core.diff_sync import ArchiveDiffSync
-from vxarchive.core.splitter import VolumeSplitter, MultiVolumeDetector
-from vxarchive.core.threat_scanner import ThreatScanner
-from vxarchive.core.archive_repair import ArchiveRepairEngine
-from vxarchive.core.bookmarks import BookmarkManager
-from vxarchive.core.iso_mounter import IsoMounter
-from vxarchive.core.metadata_inspector import MetadataInspector
+from zipack.core.shredder import SecureShredder
+from zipack.core.transcoder import ArchiveTranscoder
+from zipack.core.steganography import ArchiveSteganography
+from zipack.core.diff_sync import ArchiveDiffSync
+from zipack.core.splitter import VolumeSplitter, MultiVolumeDetector
+from zipack.core.threat_scanner import ThreatScanner
+from zipack.core.archive_repair import ArchiveRepairEngine
+from zipack.core.bookmarks import BookmarkManager
+from zipack.core.iso_mounter import IsoMounter
+from zipack.core.metadata_inspector import MetadataInspector
 
 # 3 New Suggestions: Grep, SFX, LAN Share
-from vxarchive.core.archive_grep import ArchiveGrepEngine
-from vxarchive.core.sfx_builder import SFXBuilder
-from vxarchive.core.lan_share import LANShareServer
-from vxarchive.core.sanitizer import ArchiveSanitizer
+from zipack.core.archive_grep import ArchiveGrepEngine
+from zipack.core.sfx_builder import SFXBuilder
+from zipack.core.lan_share import LANShareServer
+from zipack.core.sanitizer import ArchiveSanitizer
 
 
 class TestVXArchiveProSuite(unittest.TestCase):
@@ -207,7 +207,7 @@ class TestVXArchiveProSuite(unittest.TestCase):
         self.assertTrue(has_start)
 
     def test_cli_quick_compress_and_extract(self):
-        from vxarchive.main import handle_quick_compress, handle_extract
+        from zipack.main import handle_quick_compress, handle_extract
         sample_file = os.path.join(self.base_dir, "cli_sample.txt")
         with open(sample_file, "w", encoding="utf-8") as f:
             f.write("Quick compress CLI test payload for VXArchive shell integration")
@@ -529,7 +529,7 @@ class TestVXArchiveProSuite(unittest.TestCase):
         self.assertFalse(server.is_running)
 
     def test_archive_health_checker(self):
-        from vxarchive.core.health_checker import ArchiveHealthChecker
+        from zipack.core.health_checker import ArchiveHealthChecker
         checker = ArchiveHealthChecker()
 
         # 1. Healthy archive
@@ -625,7 +625,7 @@ class TestVXArchiveProSuite(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(out_dir, ".DS_Store")))
 
     def test_security_zip_slip_and_utils(self):
-        from vxarchive.core.utils import is_safe_path, format_size, get_app_data_dir
+        from zipack.core.utils import is_safe_path, format_size, get_app_data_dir
 
         self.assertEqual(format_size(500), "500 B")
         self.assertIn("KB", format_size(2048))
@@ -643,7 +643,7 @@ class TestVXArchiveProSuite(unittest.TestCase):
         self.assertFalse(is_safe_path(base, "..\\..\\evil.bat"))
 
     def test_archive_password_memory_and_pattern_matching(self):
-        from vxarchive.core.password_memory import ArchivePasswordMemory
+        from zipack.core.password_memory import ArchivePasswordMemory
 
         mem = ArchivePasswordMemory()
         # Clean state for isolated test

@@ -19,10 +19,10 @@ from .icons import IconEngine
 from ..core.archive_engine import ArchiveEngine
 
 
-class VXArchiveMainWindow(QMainWindow):
+class ZiPackMainWindow(QMainWindow):
     def __init__(self, initial_path: str = None):
         super().__init__()
-        self.setWindowTitle("VXArchive")
+        self.setWindowTitle("ZiPack")
         self.resize(1020, 660)
 
         # Apply application & window icon
@@ -38,10 +38,13 @@ class VXArchiveMainWindow(QMainWindow):
     def _init_window_icon(self):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         candidates = [
+            os.path.join(base_dir, "zipack.ico"),
+            os.path.join(os.path.dirname(base_dir), "zipack.ico"),
+            os.path.join(getattr(sys, "_MEIPASS", ""), "zipack.ico") if getattr(sys, "frozen", False) else "",
+            os.path.join(os.path.dirname(sys.executable), "zipack.ico") if getattr(sys, "frozen", False) else "",
+            "zipack.ico",
             os.path.join(base_dir, "vxarchive.ico"),
             os.path.join(os.path.dirname(base_dir), "vxarchive.ico"),
-            os.path.join(getattr(sys, "_MEIPASS", ""), "vxarchive.ico") if getattr(sys, "frozen", False) else "",
-            os.path.join(os.path.dirname(sys.executable), "vxarchive.ico") if getattr(sys, "frozen", False) else "",
             "vxarchive.ico"
         ]
         for c in candidates:
@@ -719,3 +722,7 @@ class VXArchiveMainWindow(QMainWindow):
         from .dialog_eval import EvaluationDialog
         dlg = EvaluationDialog(self)
         dlg.exec()
+
+
+# Backward compatibility alias
+VXArchiveMainWindow = ZiPackMainWindow

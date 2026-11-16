@@ -25,22 +25,27 @@ class ShellIntegration:
     def _get_target_exe() -> Tuple[str, str]:
         # Priority 1: Permanent user AppData installation
         local_app_data = os.environ.get("LOCALAPPDATA") or os.path.expanduser(r"~\AppData\Local")
-        appdata_exe = os.path.join(local_app_data, "Programs", "VXArchive", "VXArchive.exe")
-        appdata_ico = os.path.join(local_app_data, "Programs", "VXArchive", "vxarchive.ico")
-        if os.path.isfile(appdata_exe):
-            ico_ref = appdata_ico if os.path.isfile(appdata_ico) else f"{appdata_exe},0"
-            return appdata_exe, ico_ref
+        for brand in ["ZiPack", "VXArchive"]:
+            appdata_exe = os.path.join(local_app_data, "Programs", brand, f"{brand}.exe")
+            appdata_ico = os.path.join(local_app_data, "Programs", brand, f"{brand.lower()}.ico")
+            if os.path.isfile(appdata_exe):
+                ico_ref = appdata_ico if os.path.isfile(appdata_ico) else f"{appdata_exe},0"
+                return appdata_exe, ico_ref
 
         # Priority 2: Frozen PyInstaller execution
         if getattr(sys, "frozen", False):
             exe = sys.executable
-            ico = os.path.join(os.path.dirname(exe), "vxarchive.ico")
+            ico = os.path.join(os.path.dirname(exe), "zipack.ico")
+            if not os.path.isfile(ico):
+                ico = os.path.join(os.path.dirname(exe), "vxarchive.ico")
             return exe, (ico if os.path.isfile(ico) else f"{exe},0")
 
         # Priority 3: Local build dist or development fallback
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        dist_exe = os.path.join(base_dir, "dist", "VXArchive", "VXArchive.exe")
-        ico_file = os.path.join(base_dir, "vxarchive.ico")
+        dist_exe = os.path.join(base_dir, "dist", "ZiPack", "ZiPack.exe")
+        ico_file = os.path.join(base_dir, "zipack.ico")
+        if not os.path.isfile(ico_file):
+            ico_file = os.path.join(base_dir, "vxarchive.ico")
         if os.path.isfile(dist_exe):
             return dist_exe, f"{dist_exe},0"
         return sys.executable, (ico_file if os.path.isfile(ico_file) else f"{sys.executable},0")
@@ -67,13 +72,13 @@ class ShellIntegration:
             except Exception:
                 pass
 
-            # 2. Register VXArchive.exe Application
+            # 2. Register ZiPack.exe Application
             exe_path, ico_ref = ShellIntegration._get_target_exe()
-            app_key_path = r"Software\Classes\Applications\VXArchive.exe"
+            app_key_path = r"Software\Classes\Applications\ZiPack.exe"
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, app_key_path) as kapp:
-                winreg.SetValueEx(kapp, "", 0, winreg.REG_SZ, "VXArchive")
-                winreg.SetValueEx(kapp, "FriendlyAppName", 0, winreg.REG_SZ, "VXArchive")
-                winreg.SetValueEx(kapp, "ApplicationCompany", 0, winreg.REG_SZ, "VXArchive Studio")
+                winreg.SetValueEx(kapp, "", 0, winreg.REG_SZ, "ZiPack")
+                winreg.SetValueEx(kapp, "FriendlyAppName", 0, winreg.REG_SZ, "ZiPack")
+                winreg.SetValueEx(kapp, "ApplicationCompany", 0, winreg.REG_SZ, "ZiPack Studio")
 
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, f"{app_key_path}\\DefaultIcon") as kico:
                 winreg.SetValueEx(kico, "", 0, winreg.REG_SZ, ico_ref)
@@ -87,18 +92,18 @@ class ShellIntegration:
                     winreg.SetValueEx(kst, e, 0, winreg.REG_SZ, "")
 
             # ProgID
-            prog_path = r"Software\Classes\VXArchive.DarkGlass.Archive"
+            prog_path = r"Software\Classes\ZiPack.Archive"
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, prog_path) as kp:
-                winreg.SetValueEx(kp, "", 0, winreg.REG_SZ, "VXArchive Compressed File")
+                winreg.SetValueEx(kp, "", 0, winreg.REG_SZ, "ZiPack Compressed File")
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, f"{prog_path}\\DefaultIcon") as kpico:
                 winreg.SetValueEx(kpico, "", 0, winreg.REG_SZ, ico_ref)
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, f"{prog_path}\\shell\\open\\command") as kpcmd:
                 winreg.SetValueEx(kpcmd, "", 0, winreg.REG_SZ, f'"{exe_path}" "%1"')
 
-            # Context Menu on All Files (*\shell\VXArchive)
-            file_shell = r"Software\Classes\*\shell\VXArchive"
+            # Context Menu on All Files (*\shell\ZiPack)
+            file_shell = r"Software\Classes\*\shell\ZiPack"
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, file_shell) as kfs:
-                winreg.SetValueEx(kfs, "MUIVerb", 0, winreg.REG_SZ, "VXArchive")
+                winreg.SetValueEx(kfs, "MUIVerb", 0, winreg.REG_SZ, "ZiPack")
                 winreg.SetValueEx(kfs, "Icon", 0, winreg.REG_SZ, ico_ref)
                 if cascaded:
                     winreg.SetValueEx(kfs, "SubCommands", 0, winreg.REG_SZ, "")
@@ -106,7 +111,7 @@ class ShellIntegration:
             # Sub-commands
             add_verb = f"{file_shell}\\shell\\Add"
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, add_verb) as ka:
-                winreg.SetValueEx(ka, "MUIVerb", 0, winreg.REG_SZ, "Add to archive with VXArchive...")
+                winreg.SetValueEx(ka, "MUIVerb", 0, winreg.REG_SZ, "Add to archive with ZiPack...")
                 winreg.SetValueEx(ka, "Icon", 0, winreg.REG_SZ, ico_ref)
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, f"{add_verb}\\command") as kac:
                 winreg.SetValueEx(kac, "", 0, winreg.REG_SZ, f'"{exe_path}" -az "%1"')

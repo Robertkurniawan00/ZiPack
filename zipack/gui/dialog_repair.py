@@ -44,7 +44,7 @@ class RepairWorker(QThread):
 class ArchiveRepairDialog(QDialog):
     def __init__(self, parent=None, initial_archive: str = ""):
         super().__init__(parent)
-        self.setWindowTitle("Archive Integrity Salvager & Auto-Repair - VXArchive")
+        self.setWindowTitle("Archive Integrity Salvager & Auto-Repair - ZiPack")
         self.resize(560, 480)
         self.setMinimumWidth(500)
 

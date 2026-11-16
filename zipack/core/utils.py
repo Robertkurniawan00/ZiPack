@@ -7,11 +7,18 @@ from pathlib import Path
 
 
 def get_app_data_dir() -> Path:
-    """Returns the persistent application data directory for VXArchive in %APPDATA% as a Path object."""
+    """Returns the persistent application data directory for ZiPack in %APPDATA% as a Path object."""
     app_data = os.environ.get("APPDATA")
     if not app_data:
         app_data = os.path.expanduser("~")
-    p = Path(app_data) / "VXArchive"
+    p = Path(app_data) / "ZiPack"
+    legacy = Path(app_data) / "VXArchive"
+    if legacy.exists() and not p.exists():
+        try:
+            import shutil
+            shutil.copytree(legacy, p, dirs_exist_ok=True)
+        except Exception:
+            pass
     p.mkdir(parents=True, exist_ok=True)
     return p
 

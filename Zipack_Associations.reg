@@ -1,0 +1,82 @@
+Windows Registry Editor Version 5.00
+
+; Suppress 7z.exe console from Windows Open With menus
+[HKEY_CURRENT_USER\Software\Classes\Applications\7z.exe]
+"NoOpenWith"=""
+
+; ZiPack Application Registration & Supported Types
+[HKEY_CURRENT_USER\Software\Classes\Applications\ZiPack.exe]
+@="ZiPack"
+"FriendlyAppName"="ZiPack"
+"ApplicationCompany"="ZiPack Studio"
+
+[HKEY_CURRENT_USER\Software\Classes\Applications\ZiPack.exe\DefaultIcon]
+@="C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe,0"
+
+[HKEY_CURRENT_USER\Software\Classes\Applications\ZiPack.exe\shell\open\command]
+@="\"C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\Applications\ZiPack.exe\SupportedTypes]
+".zip"=""
+".7z"=""
+".rar"=""
+".tar"=""
+".gz"=""
+".bz2"=""
+".xz"=""
+".iso"=""
+".cab"=""
+".wim"=""
+".tgz"=""
+".tbz2"=""
+".txz"=""
+
+; ZiPack File Type ProgID
+[HKEY_CURRENT_USER\Software\Classes\ZiPack.Archive]
+@="ZiPack Compressed File"
+
+[HKEY_CURRENT_USER\Software\Classes\ZiPack.Archive\DefaultIcon]
+@="C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe,0"
+
+[HKEY_CURRENT_USER\Software\Classes\ZiPack.Archive\shell\open\command]
+@="\"C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe\" \"%1\""
+
+; Cascaded Context Menu on Files
+[HKEY_CURRENT_USER\Software\Classes\*\shell\ZiPack]
+"MUIVerb"="ZiPack"
+"Icon"="C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe,0"
+"SubCommands"=""
+
+[HKEY_CURRENT_USER\Software\Classes\*\shell\ZiPack\shell\Add]
+"MUIVerb"="Add to archive with ZiPack..."
+"Icon"="C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe,0"
+
+[HKEY_CURRENT_USER\Software\Classes\*\shell\ZiPack\shell\Add\command]
+@="\"C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe\" -az \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\*\shell\ZiPack\shell\ExtractHere]
+"MUIVerb"="Extract here"
+"Icon"="C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe,0"
+
+[HKEY_CURRENT_USER\Software\Classes\*\shell\ZiPack\shell\ExtractHere\command]
+@="\"C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe\" -x \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\*\shell\ZiPack\shell\ExtractSubfolder]
+"MUIVerb"="Extract to subfolder"
+"Icon"="C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe,0"
+
+[HKEY_CURRENT_USER\Software\Classes\*\shell\ZiPack\shell\ExtractSubfolder\command]
+@="\"C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe\" -xd \"%1\""
+
+; Cascaded Context Menu on Folders
+[HKEY_CURRENT_USER\Software\Classes\Directory\shell\ZiPack]
+"MUIVerb"="ZiPack"
+"Icon"="C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe,0"
+"SubCommands"=""
+
+[HKEY_CURRENT_USER\Software\Classes\Directory\shell\ZiPack\shell\Add]
+"MUIVerb"="Add to archive with ZiPack..."
+"Icon"="C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe,0"
+
+[HKEY_CURRENT_USER\Software\Classes\Directory\shell\ZiPack\shell\Add\command]
+@="\"C:\\Users\\Roku\\AppData\\Local\\Programs\\ZiPack\\ZiPack.exe\" -az \"%1\""

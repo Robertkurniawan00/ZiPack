@@ -19,7 +19,7 @@ from .icons import IconEngine
 class ArchiveNameAndParametersDialog(QDialog):
     def __init__(self, parent=None, default_archive_name: str = "archive.zip", files_to_add: Optional[List[str]] = None):
         super().__init__(parent)
-        self.setWindowTitle("Add to Archive - VXArchive")
+        self.setWindowTitle("Add to Archive - ZiPack")
         self.resize(540, 520)
         self.setMinimumWidth(500)
 
