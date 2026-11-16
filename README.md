@@ -140,7 +140,7 @@ ZiPack supports direct command-line arguments for system context menus and autom
 
 ---
 
-## 🌐 Multi-Language Native Architecture
+## Multi-Language Native Architecture
 
 ZiPack combines the rapid UI capabilities of Python with the raw execution speed and system integration of native compiled languages:
 
