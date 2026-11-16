@@ -89,8 +89,8 @@ ZiPack/
 
 1. Clone or download the repository:
    ```bash
-   git clone https://github.com/Robertkurniawan00/VXArchive.git
-   cd VXArchive
+   git clone https://github.com/Robertkurniawan00/ZiPack.git
+   cd ZiPack
    ```
 
 2. Install dependencies:
