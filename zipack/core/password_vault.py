@@ -1,5 +1,5 @@
 """
-Encrypted / persistent password vault for VXArchive.
+Encrypted / persistent password vault for ZiPack.
 """
 import os
 import json

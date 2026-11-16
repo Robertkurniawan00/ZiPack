@@ -1,5 +1,5 @@
 """
-Add to Archive Dialog for VXArchive.
+Add to Archive Dialog for ZiPack.
 Full-featured archive creation dialog supporting format selection (ZIP, 7Z, TAR),
 compression levels, AES-256 encryption, split volumes, and file curation.
 """

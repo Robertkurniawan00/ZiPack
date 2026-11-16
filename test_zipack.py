@@ -1,5 +1,5 @@
 """
-Unit tests for VXArchive Dark Glass Edition, including 10 Pro Features:
+Unit tests for ZiPack Multi-Language Edition, including Pro Features and Native Acceleration:
 1. DoD 5220.22-M Secure Multi-Pass Shredder
 2. Archive Format Transcoder / Converter
 3. Steganographic Secret Vault (Hide/Extract Archive in Images)
@@ -26,7 +26,7 @@ if not app:
 
 from zipack.core.archive_engine import ArchiveEngine, ArchiveItem
 from zipack.core.license_manager import LicenseManager
-from zipack.core.benchmark import VXArchiveBenchmark
+from zipack.core.benchmark import ZiPackBenchmark, VXArchiveBenchmark
 from zipack.core.hasher import HashEngine
 from zipack.core.dedup_analyzer import DuplicateAnalyzer
 from zipack.core.batch_processor import BatchProcessor
@@ -52,7 +52,7 @@ from zipack.core.lan_share import LANShareServer
 from zipack.core.sanitizer import ArchiveSanitizer
 
 
-class TestVXArchiveProSuite(unittest.TestCase):
+class TestZiPackSuite(unittest.TestCase):
     def setUp(self):
         self.engine = ArchiveEngine()
         self.test_dir = tempfile.TemporaryDirectory()
@@ -61,18 +61,18 @@ class TestVXArchiveProSuite(unittest.TestCase):
         # Create dummy test files
         self.file1 = os.path.join(self.base_dir, "test1.txt")
         with open(self.file1, "w", encoding="utf-8") as f:
-            f.write("VXArchive test sample document 1\n" * 50)
+            f.write("ZiPack test sample document 1\n" * 50)
 
         # Duplicate of file 1
         self.file1_dup = os.path.join(self.base_dir, "test1_copy.txt")
         with open(self.file1_dup, "w", encoding="utf-8") as f:
-            f.write("VXArchive test sample document 1\n" * 50)
+            f.write("ZiPack test sample document 1\n" * 50)
 
         self.sub_dir = os.path.join(self.base_dir, "subfolder")
         os.makedirs(self.sub_dir, exist_ok=True)
         self.file2 = os.path.join(self.sub_dir, "test2.txt")
         with open(self.file2, "w", encoding="utf-8") as f:
-            f.write("VXArchive nested file 2\n" * 100)
+            f.write("ZiPack nested file 2\n" * 100)
 
         # Junk file
         self.junk_file = os.path.join(self.base_dir, "Thumbs.db")
@@ -210,7 +210,7 @@ class TestVXArchiveProSuite(unittest.TestCase):
         from zipack.main import handle_quick_compress, handle_extract
         sample_file = os.path.join(self.base_dir, "cli_sample.txt")
         with open(sample_file, "w", encoding="utf-8") as f:
-            f.write("Quick compress CLI test payload for VXArchive shell integration")
+            f.write("Quick compress CLI test payload for ZiPack shell integration")
 
         # Quick compress to zip (-az)
         ret_zip = handle_quick_compress(sample_file, format_ext="zip")
@@ -230,10 +230,10 @@ class TestVXArchiveProSuite(unittest.TestCase):
         extracted_file = os.path.join(self.base_dir, "cli_sample", "cli_sample.txt")
         self.assertTrue(os.path.isfile(extracted_file))
         with open(extracted_file, "r", encoding="utf-8") as f:
-            self.assertEqual(f.read(), "Quick compress CLI test payload for VXArchive shell integration")
+            self.assertEqual(f.read(), "Quick compress CLI test payload for ZiPack shell integration")
 
     def test_benchmark_engine(self):
-        bench = VXArchiveBenchmark(multithreading=False, update_interval=0.05)
+        bench = ZiPackBenchmark(multithreading=False, update_interval=0.05)
         bench.start()
         import time
         for _ in range(20):
@@ -246,7 +246,7 @@ class TestVXArchiveProSuite(unittest.TestCase):
 
     def test_license_manager(self):
         mgr = LicenseManager.get_instance()
-        reg_ok = mgr.register("VXArchive Enterprise", "KEY-12345")
+        reg_ok = mgr.register("ZiPack Enterprise", "KEY-12345")
         self.assertTrue(reg_ok)
         self.assertTrue(mgr.is_registered)
 
@@ -358,7 +358,7 @@ class TestVXArchiveProSuite(unittest.TestCase):
     def test_feature_5_splitter(self):
         # Create a 200KB file
         large_file = os.path.join(self.base_dir, "large.bin")
-        payload = b"VXArchiveSplitterBlock1234567890" * 6000  # ~192 KB
+        payload = b"ZiPackSplitterBlock1234567890" * 6000  # ~192 KB
         with open(large_file, "wb") as f:
             f.write(payload)
 
@@ -475,7 +475,7 @@ class TestVXArchiveProSuite(unittest.TestCase):
 
     def test_feature_10_metadata_inspector(self):
         # Test text file inspection
-        data = b"Line 1: Hello World\nLine 2: VXArchive Pro Edition\nLine 3: Clean minimal design\n"
+        data = b"Line 1: Hello World\nLine 2: ZiPack Multi-Language Edition\nLine 3: Clean minimal design\n"
         meta = MetadataInspector.inspect("notes.txt", data)
         self.assertEqual(meta["Category"], "Text / Source Code")
         self.assertEqual(meta["Total Lines"], "3")
@@ -484,15 +484,15 @@ class TestVXArchiveProSuite(unittest.TestCase):
     def test_feature_11_deep_grep(self):
         grep_zip = os.path.join(self.base_dir, "grep_test.zip")
         with zipfile.ZipFile(grep_zip, "w") as zf:
-            zf.writestr("app/config.py", "DEBUG = True\nAPI_KEY = 'VX_TOP_SECRET_999'\nPORT = 8080\n")
-            zf.writestr("readme.txt", "VXArchive Documentation\nVersion 2.0\n")
+            zf.writestr("app/config.py", "DEBUG = True\nAPI_KEY = 'ZIPACK_SECRET_999'\nPORT = 8080\n")
+            zf.writestr("readme.txt", "ZiPack Documentation\nVersion 2.0\n")
 
         engine = ArchiveGrepEngine()
-        matches = engine.search(grep_zip, query="VX_TOP_SECRET_999", is_regex=False)
+        matches = engine.search(grep_zip, query="ZIPACK_SECRET_999", is_regex=False)
         self.assertEqual(len(matches), 1)
         self.assertEqual(matches[0].file_path, "app/config.py")
         self.assertEqual(matches[0].line_number, 2)
-        self.assertIn("VX_TOP_SECRET_999", matches[0].line_content)
+        self.assertIn("ZIPACK_SECRET_999", matches[0].line_content)
 
     def test_feature_12_sfx_builder(self):
         sfx_out = os.path.join(self.base_dir, "standalone_app.exe")
@@ -500,7 +500,7 @@ class TestVXArchiveProSuite(unittest.TestCase):
         ok, msg = builder.build_sfx(
             sources=self.file1,
             output_exe_path=sfx_out,
-            title="VXArchive Self-Extracting Test",
+            title="ZiPack Self-Extracting Test",
             extract_path="%%TEMP%%",
             silent=True
         )
@@ -578,8 +578,8 @@ class TestVXArchiveProSuite(unittest.TestCase):
             zf.writestr("docs/manual.pdf", dup_content)
             zf.writestr("backup/manual_copy.pdf", dup_content)
             # Real clean content
-            zf.writestr("src/main.py", b"print('Hello VXArchive')\n")
-            zf.writestr("README.md", b"# VXArchive Clean Project\n")
+            zf.writestr("src/main.py", b"print('Hello ZiPack')\n")
+            zf.writestr("README.md", b"# ZiPack Clean Project\n")
 
         # 2. Analyze the archive
         report = sanitizer.analyze(dirty_zip)

@@ -1,8 +1,7 @@
 """
-Common utility functions, security guards, and path resolution for VXArchive.
+Common utility functions, security guards, and path resolution for ZiPack.
 """
 import os
-import sys
 from pathlib import Path
 
 

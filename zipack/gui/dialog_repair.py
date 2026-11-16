@@ -1,5 +1,5 @@
 """
-Archive Integrity Salvager and Auto-Repair Wizard for VXArchive.
+Archive Integrity Salvager and Auto-Repair Wizard for ZiPack.
 Recovers intact files from damaged, partially downloaded, or header-corrupted archives.
 """
 import os

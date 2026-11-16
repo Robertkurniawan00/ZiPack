@@ -1,5 +1,5 @@
 """
-Commercial and Community edition licensing manager for VXArchive.
+Commercial and Community edition licensing manager for ZiPack.
 """
 import os
 import json

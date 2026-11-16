@@ -1,5 +1,5 @@
 """
-Core modal dialogs for VXArchive: Add, Extract, View, Info, Benchmark, About, Eval, Find, Wizard, Password, Progress, Hash, Duplicates, Batch.
+Core modal dialogs for ZiPack: Add, Extract, View, Info, Benchmark, About, Eval, Find, Wizard, Password, Progress, Hash, Duplicates, Batch.
 """
 import os
 import sys
@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap, QIcon
 from ..core.archive_engine import ArchiveEngine
-from ..core.benchmark import VXArchiveBenchmark
+from ..core.benchmark import ZiPackBenchmark
 from ..core.hasher import HashEngine
 from ..core.dedup_analyzer import DuplicateAnalyzer
 from ..core.utils import format_size
@@ -63,7 +63,7 @@ class BenchmarkDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Hardware Compression Benchmark")
         self.resize(450, 250)
-        self.benchmark = VXArchiveBenchmark()
+        self.benchmark = ZiPackBenchmark()
 
         layout = QVBoxLayout(self)
         self.lbl_speed = QLabel("Throughput: 0 MB/s")
@@ -95,7 +95,7 @@ class BenchmarkDialog(QDialog):
         super().closeEvent(e)
 
 
-class AboutVXArchiveDialog(QDialog):
+class AboutZiPackDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("About ZiPack")
@@ -113,10 +113,7 @@ class AboutVXArchiveDialog(QDialog):
             os.path.join(os.path.dirname(base_dir), "zipack.ico"),
             os.path.join(getattr(sys, "_MEIPASS", ""), "zipack.ico") if getattr(sys, "frozen", False) else "",
             os.path.join(os.path.dirname(sys.executable), "zipack.ico") if getattr(sys, "frozen", False) else "",
-            "zipack.ico",
-            os.path.join(base_dir, "vxarchive.ico"),
-            os.path.join(os.path.dirname(base_dir), "vxarchive.ico"),
-            "vxarchive.ico"
+            "zipack.ico"
         ]:
             if cand and os.path.isfile(cand):
                 pix = QPixmap(cand).scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
@@ -130,7 +127,8 @@ class AboutVXArchiveDialog(QDialog):
         layout.addWidget(lbl)
 
 
-AboutZiPackDialog = AboutVXArchiveDialog
+# Compatibility alias
+AboutVXArchiveDialog = AboutZiPackDialog
 
 
 class EvaluationDialog(QDialog):
@@ -188,7 +186,7 @@ class PasswordDialog(QDialog):
             layout.addWidget(self.remember_pattern_chk)
 
 
-class VXArchiveProgressDialog(QDialog):
+class ZiPackProgressDialog(QDialog):
     def __init__(self, parent=None, title="Operation in Progress", operation_type="Processing"):
         super().__init__(parent)
         self.setWindowTitle(title)
@@ -201,6 +199,10 @@ class VXArchiveProgressDialog(QDialog):
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 100)
         layout.addWidget(self.progress_bar)
+
+
+# Compatibility alias
+VXArchiveProgressDialog = ZiPackProgressDialog
 
 
 class HashInspectorDialog(QDialog):

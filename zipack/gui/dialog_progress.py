@@ -1,1 +1,1 @@
-from .dialogs_base import VXArchiveProgressDialog
+from .dialogs_base import ZiPackProgressDialog, VXArchiveProgressDialog

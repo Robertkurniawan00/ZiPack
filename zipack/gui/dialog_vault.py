@@ -1,5 +1,5 @@
 """
-Password vault management dialog for VXArchive.
+Password vault management dialog for ZiPack.
 Provides features to view, add, edit, delete, and copy stored archive credentials.
 """
 import os

@@ -1,5 +1,5 @@
 """
-10 Pro modal dialogs for VXArchive: Shredder, Transcoder, Steganography, DiffSync, Splitter, ThreatScanner, Repair, Bookmarks, Iso, Metadata.
+10 Pro modal dialogs for ZiPack: Shredder, Transcoder, Steganography, DiffSync, Splitter, ThreatScanner, Repair, Bookmarks, Iso, Metadata.
 """
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,

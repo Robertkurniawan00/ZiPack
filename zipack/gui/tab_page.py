@@ -1,5 +1,5 @@
 """
-Archive and Directory Browser Tab Page for VXArchive.
+Archive and Directory Browser Tab Page for ZiPack.
 Includes interactive clickable breadcrumb navigation, drag-and-drop file ingestion,
 session password caching with pattern auto-unlock, and QuickLook previews.
 """

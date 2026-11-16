@@ -1,11 +1,11 @@
 """
-GUI smoke tests for VXArchive replica including all enhanced features:
+GUI smoke tests for ZiPack replica including all enhanced features:
 - Multi-Tab archive browsing
 - QuickLook Spacebar preview
 - Donut storage chart
 - Password Vault
 - Shell integration & 7-Zip replacement
-- All classic VXArchive dialogs
+- All classic ZiPack dialogs
 """
 import sys
 import os
@@ -18,18 +18,18 @@ app = QApplication.instance()
 if not app:
     app = QApplication(sys.argv)
 
-from zipack.gui.main_window import VXArchiveMainWindow
+from zipack.gui.main_window import ZiPackMainWindow, VXArchiveMainWindow
 from zipack.gui.dialog_add import ArchiveNameAndParametersDialog
 from zipack.gui.dialog_extract import ExtractionPathAndOptionsDialog
 from zipack.gui.dialog_view import InternalViewerDialog
 from zipack.gui.dialog_info import ArchiveInfoDialog
 from zipack.gui.dialog_benchmark import BenchmarkDialog
-from zipack.gui.dialog_about import AboutVXArchiveDialog
+from zipack.gui.dialog_about import AboutZiPackDialog, AboutVXArchiveDialog
 from zipack.gui.dialog_eval import EvaluationDialog
 from zipack.gui.dialog_find import FindFilesDialog
 from zipack.gui.dialog_wizard import WizardDialog
 from zipack.gui.dialog_password import PasswordDialog
-from zipack.gui.dialog_progress import VXArchiveProgressDialog
+from zipack.gui.dialog_progress import ZiPackProgressDialog, VXArchiveProgressDialog
 from zipack.gui.dialog_hash import HashInspectorDialog
 from zipack.gui.dialog_duplicates import DuplicateAnalyzerDialog
 from zipack.gui.dialog_batch import BatchManagerDialog
@@ -58,9 +58,9 @@ from zipack.gui.dialog_missing_volume import MissingVolumeDialog
 from zipack.gui.dialog_sanitizer import ArchiveSanitizerDialog
 from zipack.gui.mica_effect import apply_windows_11_mica
 
-class TestVXArchiveGUI(unittest.TestCase):
+class TestZiPackGUI(unittest.TestCase):
     def test_main_window_and_tabs(self):
-        win = VXArchiveMainWindow(initial_path=os.getcwd())
+        win = ZiPackMainWindow(initial_path=os.getcwd())
         self.assertIsNotNone(win)
         self.assertEqual(win.tabs.count(), 1)
         # Add new tab
@@ -135,7 +135,7 @@ class TestVXArchiveGUI(unittest.TestCase):
         dlg.close()
 
     def test_dialog_progress(self):
-        dlg = VXArchiveProgressDialog(None, title="Testing Progress", operation_type="Extracting")
+        dlg = ZiPackProgressDialog(None, title="Testing Progress", operation_type="Extracting")
         self.assertIsNotNone(dlg)
         dlg.close()
 
@@ -165,7 +165,7 @@ class TestVXArchiveGUI(unittest.TestCase):
         dlg.close()
 
     def test_dialog_view(self):
-        dlg = InternalViewerDialog(None, title="readme.txt", data=b"Hello VXArchive 1:1 replica!")
+        dlg = InternalViewerDialog(None, title="readme.txt", data=b"Hello ZiPack high-performance replica!")
         self.assertIsNotNone(dlg)
         dlg.close()
 
@@ -191,7 +191,7 @@ class TestVXArchiveGUI(unittest.TestCase):
         dlg.close()
 
     def test_dialog_about(self):
-        dlg = AboutVXArchiveDialog(None)
+        dlg = AboutZiPackDialog(None)
         self.assertIsNotNone(dlg)
         dlg.close()
 
@@ -327,7 +327,7 @@ class TestVXArchiveGUI(unittest.TestCase):
         dlg.close()
 
     def test_navigation_history(self):
-        win = VXArchiveMainWindow(initial_path=os.getcwd())
+        win = ZiPackMainWindow(initial_path=os.getcwd())
         tab = win.current_tab
         self.assertIsNotNone(tab)
         self.assertFalse(tab.can_go_back())

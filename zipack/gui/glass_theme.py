@@ -1,5 +1,5 @@
 """
-Dark glass, OLED black, and Fluent light stylesheets and theme tokens for VXArchive.
+Dark glass, OLED black, and Fluent light stylesheets and theme tokens for ZiPack.
 """
 from PyQt6.QtCore import QSettings
 

@@ -7,7 +7,7 @@ import zlib
 import os
 
 
-class VXArchiveBenchmark:
+class ZiPackBenchmark:
     """Measures compression throughput (KB/s, MB/s) and integrity checking speed."""
 
     def __init__(self, multithreading: bool = True, update_interval: float = 0.1):
@@ -21,7 +21,7 @@ class VXArchiveBenchmark:
         self._lock = threading.Lock()
 
     def _worker(self):
-        sample_chunk = b"VXArchiveBenchmarkBlockData_0123456789ABCDEF" * 1024  # 44 KB
+        sample_chunk = b"ZiPackBenchmarkBlockData_0123456789ABCDEF" * 1024  # 44 KB
         while self.running:
             try:
                 comp = zlib.compress(sample_chunk, level=6)
@@ -60,3 +60,7 @@ class VXArchiveBenchmark:
         if elapsed <= 0:
             return 0.0
         return (self.total_bytes / (1024 * 1024)) / elapsed
+
+
+# Compatibility alias
+VXArchiveBenchmark = ZiPackBenchmark

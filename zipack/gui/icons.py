@@ -1,5 +1,5 @@
 """
-High-DPI vector icon generator for VXArchive modern dark glass interface.
+High-DPI vector icon generator for ZiPack modern dark glass interface.
 Renders crisp, antialiased Fluent-style icons for toolbars, menus, and file listings.
 """
 from PyQt6.QtGui import QIcon, QPixmap, QColor, QPainter, QPainterPath, QPen, QBrush, QLinearGradient

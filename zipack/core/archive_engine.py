@@ -5,11 +5,8 @@ import os
 import sys
 import subprocess
 import zipfile
-import tarfile
 import json
-import zlib
-from typing import List, Tuple, Optional, Any
-from pathlib import Path
+from typing import List, Tuple, Optional
 
 
 class ArchiveItem:
@@ -37,7 +34,6 @@ class ArchiveEngine:
             if meipass:
                 candidates.append(os.path.join(meipass, "bin", "7z.exe"))
                 candidates.append(os.path.join(meipass, "zipack", "bin", "7z.exe"))
-                candidates.append(os.path.join(meipass, "vxarchive", "bin", "7z.exe"))
             exe_dir = os.path.dirname(sys.executable)
             candidates.append(os.path.join(exe_dir, "bin", "7z.exe"))
             candidates.append(os.path.join(exe_dir, "zipack", "bin", "7z.exe"))

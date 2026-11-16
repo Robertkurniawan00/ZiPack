@@ -81,10 +81,7 @@ def main():
         os.path.join(_cur_dir, "zipack.ico"),
         os.path.join(getattr(sys, "_MEIPASS", ""), "zipack.ico") if getattr(sys, "frozen", False) else "",
         os.path.join(os.path.dirname(sys.executable), "zipack.ico") if getattr(sys, "frozen", False) else "",
-        "zipack.ico",
-        os.path.join(_parent_dir, "vxarchive.ico"),
-        os.path.join(_cur_dir, "vxarchive.ico"),
-        "vxarchive.ico"
+        "zipack.ico"
     ]
     for ic in icon_candidates:
         if ic and os.path.isfile(ic):

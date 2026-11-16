@@ -1,5 +1,5 @@
 """
-Extraction Path and Options Dialog for VXArchive.
+Extraction Path and Options Dialog for ZiPack.
 Allows user to specify destination directory, browse via native folder picker,
 extract to subfolder, configure overwrite behaviors, and supply password.
 """

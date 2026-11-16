@@ -1,5 +1,5 @@
 """
-Main multi-tab application window for VXArchive.
+Main multi-tab application window for ZiPack.
 """
 import os
 import sys
@@ -42,10 +42,7 @@ class ZiPackMainWindow(QMainWindow):
             os.path.join(os.path.dirname(base_dir), "zipack.ico"),
             os.path.join(getattr(sys, "_MEIPASS", ""), "zipack.ico") if getattr(sys, "frozen", False) else "",
             os.path.join(os.path.dirname(sys.executable), "zipack.ico") if getattr(sys, "frozen", False) else "",
-            "zipack.ico",
-            os.path.join(base_dir, "vxarchive.ico"),
-            os.path.join(os.path.dirname(base_dir), "vxarchive.ico"),
-            "vxarchive.ico"
+            "zipack.ico"
         ]
         for c in candidates:
             if c and os.path.isfile(c):
@@ -243,7 +240,7 @@ class ZiPackMainWindow(QMainWindow):
         # --- Help Menu ---
         help_menu = mb.addMenu("&Help")
 
-        act_about = QAction("About VXArchive...", self)
+        act_about = QAction("About ZiPack...", self)
         act_about.triggered.connect(self._action_about)
         help_menu.addAction(act_about)
 
@@ -398,7 +395,7 @@ class ZiPackMainWindow(QMainWindow):
             if ok:
                 ret = QMessageBox.information(
                     self, "Archive Created",
-                    f"Successfully created archive:\n{out_path}\n\nWould you like to open it in VXArchive?",
+                    f"Successfully created archive:\n{out_path}\n\nWould you like to open it in ZiPack?",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
                 )
                 if ret == QMessageBox.StandardButton.Yes:
@@ -469,7 +466,7 @@ class ZiPackMainWindow(QMainWindow):
             if ok:
                 ret = QMessageBox.information(
                     self, "Archive Created",
-                    f"Successfully created archive:\n{out_path}\n\nWould you like to open it in VXArchive?",
+                    f"Successfully created archive:\n{out_path}\n\nWould you like to open it in ZiPack?",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
                 )
                 if ret == QMessageBox.StandardButton.Yes:
@@ -625,7 +622,7 @@ class ZiPackMainWindow(QMainWindow):
     def _action_metadata(self):
         from .dialog_metadata import MetadataInspectorDialog
         name = self.current_tab.current_archive_path if self.current_tab else "Archive"
-        dlg = MetadataInspectorDialog(self, file_name=name, raw_data=b"VXArchive Metadata Payload")
+        dlg = MetadataInspectorDialog(self, file_name=name, raw_data=b"ZiPack Metadata Payload")
         dlg.exec()
 
     def _action_vault(self):
@@ -714,8 +711,8 @@ class ZiPackMainWindow(QMainWindow):
         dlg.exec()
 
     def _action_about(self):
-        from .dialog_about import AboutVXArchiveDialog
-        dlg = AboutVXArchiveDialog(self)
+        from .dialog_about import AboutZiPackDialog
+        dlg = AboutZiPackDialog(self)
         dlg.exec()
 
     def _action_eval(self):
