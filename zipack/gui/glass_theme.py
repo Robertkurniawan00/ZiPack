@@ -725,7 +725,7 @@ class ThemeManager:
             t = settings.value("theme", None)
             if not t:
                 # Check legacy setting
-                t = QSettings("VXArchive", "VXArchive").value("theme", "dark")
+                t = QSettings("ZiPack", "ZiPack").value("theme", "dark")
             return t if t in cls.THEMES else "dark"
         except Exception:
             return "dark"
