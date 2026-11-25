@@ -384,5 +384,26 @@ class TestZiPackGUI(unittest.TestCase):
         ThemeManager.apply_theme(w, "dark")
         w.close()
 
+    def test_quicklook_hex_and_chart_donut(self):
+        ql = QuickLookDialog(None, title="binary.bin", data=b"\x00\x01\x02\x03ABCD")
+        self.assertIn("00000000", ql.text_edit.toPlainText())
+        ql.close()
+
+        dlg = StorageChartDialog(None, items=[{"name": "a.zip", "size": 1024}, {"name": "b.png", "size": 2048}])
+        self.assertTrue(hasattr(dlg, "chart"))
+        self.assertEqual(dlg.table.columnCount(), 3)
+        dlg.close()
+
+    def test_tab_page_quick_filter(self):
+        from zipack.gui.tab_page import ArchiveTabPage
+        tab = ArchiveTabPage(os.getcwd())
+        total = tab.table.rowCount()
+        self.assertGreater(total, 0)
+        tab.filter_input.setText("test_gui.py")
+        visible = sum(1 for r in range(total) if not tab.table.isRowHidden(r))
+        self.assertGreaterEqual(visible, 1)
+        self.assertLessEqual(visible, total)
+        tab.close()
+
 if __name__ == "__main__":
     unittest.main()

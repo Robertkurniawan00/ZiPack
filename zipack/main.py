@@ -49,6 +49,20 @@ def handle_extract(archive_path: str, into_subfolder: bool = True, destination: 
     return 0 if ok else 1
 
 
+def handle_smart_extract(archive_path: str, destination: str = None) -> int:
+    """CLI handler for smart sanitized extraction (-xs)."""
+    if not os.path.isfile(archive_path):
+        return 1
+    try:
+        from zipack.core.sanitizer import ArchiveSanitizer
+    except ImportError:
+        from .core.sanitizer import ArchiveSanitizer
+    sanitizer = ArchiveSanitizer()
+    dest = destination or os.path.dirname(os.path.abspath(archive_path))
+    ok, _, _ = sanitizer.smart_extract(archive_path, dest)
+    return 0 if ok else 1
+
+
 def main():
     if len(sys.argv) > 1:
         arg1 = sys.argv[1].lower()
@@ -56,12 +70,14 @@ def main():
             sys.exit(handle_quick_compress(sys.argv[2], "zip"))
         elif arg1 in ("-a7", "--7z") and len(sys.argv) > 2:
             sys.exit(handle_quick_compress(sys.argv[2], "7z"))
+        elif arg1 in ("-xs", "--smart-extract") and len(sys.argv) > 2:
+            sys.exit(handle_smart_extract(sys.argv[2]))
         elif arg1 in ("-xd", "--subfolder") and len(sys.argv) > 2:
             sys.exit(handle_extract(sys.argv[2], into_subfolder=True))
         elif arg1 in ("-x", "--extract") and len(sys.argv) > 2:
             sys.exit(handle_extract(sys.argv[2], into_subfolder=False))
 
-    from PyQt6.QtWidgets import QApplication
+    from PyQt6.QtWidgets import QApplication, QDialog
     try:
         from zipack.gui.main_window import ZiPackMainWindow
     except ImportError:
@@ -87,6 +103,35 @@ def main():
         if ic and os.path.isfile(ic):
             app.setWindowIcon(QIcon(ic))
             break
+
+    # GUI-mode CLI flags (-e, -a, -sanitize)
+    if len(sys.argv) > 2:
+        arg1 = sys.argv[1].lower()
+        target = sys.argv[2]
+        if arg1 == "-e" and os.path.isfile(target):
+            from zipack.gui.dialog_extract import ExtractionPathAndOptionsDialog
+            dlg = ExtractionPathAndOptionsDialog(None, default_archive=target)
+            if dlg.exec() == QDialog.DialogCode.Accepted:
+                handle_extract(target, into_subfolder=False, destination=dlg.get_destination_path())
+            sys.exit(0)
+        elif arg1 == "-a" and os.path.exists(target):
+            from zipack.gui.dialog_add import ArchiveNameAndParametersDialog
+            dlg = ArchiveNameAndParametersDialog(None, files_to_add=[target])
+            if dlg.exec() == QDialog.DialogCode.Accepted:
+                engine = ArchiveEngine()
+                engine.create_archive(
+                    dlg.get_output_path(), dlg.get_files_to_add(),
+                    archive_format=dlg.get_format(), password=dlg.get_password(),
+                    compression_level=dlg.get_compression_level(),
+                    split_volume=dlg.get_split_volume(),
+                    encrypt_headers=dlg.should_encrypt_headers()
+                )
+            sys.exit(0)
+        elif arg1 == "-sanitize" and os.path.isfile(target):
+            from zipack.gui.dialog_sanitizer import ArchiveSanitizerDialog
+            dlg = ArchiveSanitizerDialog(None, archive_path=target)
+            dlg.exec()
+            sys.exit(0)
 
     window = ZiPackMainWindow()
     if len(sys.argv) > 1 and not sys.argv[1].startswith("-"):

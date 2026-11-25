@@ -738,6 +738,41 @@ class TestZiPackSuite(unittest.TestCase):
         ps_mod = os.path.join(repo_root, "modules", "ZiPack", "ZiPack.psm1")
         self.assertTrue(os.path.isfile(ps_mod), f"PowerShell module not found at {ps_mod}")
 
+    def test_zip_slip_blocked_on_extract(self):
+        import tempfile, zipfile
+        from zipack.core.archive_engine import ArchiveEngine
+        with tempfile.TemporaryDirectory() as tmp:
+            arc = os.path.join(tmp, "evil.zip")
+            dest = os.path.join(tmp, "out")
+            with zipfile.ZipFile(arc, "w") as zf:
+                zf.writestr("../escape.txt", "malicious")
+            engine = ArchiveEngine()
+            ok, msg = engine.extract_archive(arc, dest)
+            self.assertFalse(ok)
+            self.assertIn("Zip Slip", msg)
+            self.assertFalse(os.path.exists(os.path.join(tmp, "escape.txt")))
+
+    def test_add_to_archive_appends_and_read_member_bytes(self):
+        import tempfile
+        from zipack.core.archive_engine import ArchiveEngine
+        with tempfile.TemporaryDirectory() as tmp:
+            f1 = os.path.join(tmp, "first.txt")
+            f2 = os.path.join(tmp, "second.txt")
+            with open(f1, "w", encoding="utf-8") as fh:
+                fh.write("hello first")
+            with open(f2, "w", encoding="utf-8") as fh:
+                fh.write("hello second")
+            arc = os.path.join(tmp, "bundle.zip")
+            engine = ArchiveEngine()
+            ok1, _ = engine.create_archive(arc, [f1])
+            self.assertTrue(ok1)
+            ok2, _ = engine.add_to_archive(arc, [f2])
+            self.assertTrue(ok2)
+            names = [it.name for it in engine.list_archive_contents(arc)]
+            self.assertIn("first.txt", names)
+            self.assertIn("second.txt", names)
+            self.assertEqual(engine.read_member_bytes(arc, "second.txt"), b"hello second")
+
 if __name__ == "__main__":
     unittest.main()
 

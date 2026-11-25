@@ -7,7 +7,7 @@ from typing import List, Optional
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTabWidget, QToolBar, QStatusBar, QFileDialog, QMessageBox,
-    QDialog, QApplication
+    QDialog, QApplication, QPushButton, QLabel
 )
 from PyQt6.QtGui import QAction, QIcon, QActionGroup, QDragEnterEvent, QDropEvent
 from PyQt6.QtCore import Qt
@@ -17,6 +17,7 @@ from .mica_effect import apply_windows_11_mica
 from .glass_theme import apply_dark_glass_theme, ThemeManager
 from .icons import IconEngine
 from ..core.archive_engine import ArchiveEngine
+from ..core.utils import format_size
 
 
 class ZiPackMainWindow(QMainWindow):
@@ -53,12 +54,33 @@ class ZiPackMainWindow(QMainWindow):
         self._setup_menu_bar()
         self.tabs = QTabWidget()
         self.tabs.setTabsClosable(True)
+        self.tabs.setMovable(True)
+        self.tabs.setDocumentMode(True)
         self.tabs.tabCloseRequested.connect(self.close_tab)
+        self.tabs.currentChanged.connect(lambda _: self._sync_window_state())
+
+        btn_new_tab = QPushButton("+")
+        btn_new_tab.setObjectName("btnNewTabCorner")
+        btn_new_tab.setToolTip("Open New Tab (Ctrl+T)")
+        btn_new_tab.clicked.connect(lambda: self.add_tab(self.current_tab.current_folder_path if self.current_tab else os.getcwd()))
+        self.tabs.setCornerWidget(btn_new_tab, Qt.Corner.TopRightCorner)
+
         self.setCentralWidget(self.tabs)
 
-        self.add_tab(initial_path)
         self._setup_toolbar()
-        self.statusBar().showMessage("Ready")
+        self._setup_status_bar()
+        self.add_tab(initial_path)
+        self._sync_window_state()
+
+    def _setup_status_bar(self):
+        sb = self.statusBar()
+        sb.showMessage("Ready")
+        self.lbl_status_count = QLabel("0 items")
+        self.lbl_status_count.setObjectName("statusBadge")
+        self.lbl_status_mode = QLabel("Folder")
+        self.lbl_status_mode.setObjectName("statusBadge")
+        sb.addPermanentWidget(self.lbl_status_count)
+        sb.addPermanentWidget(self.lbl_status_mode)
 
     def _setup_menu_bar(self):
         mb = self.menuBar()
@@ -143,6 +165,11 @@ class ZiPackMainWindow(QMainWindow):
         act_view_edit_path.setShortcut("Ctrl+L")
         act_view_edit_path.triggered.connect(self._action_edit_address_bar)
         view_menu.addAction(act_view_edit_path)
+
+        act_view_filter = QAction("Filter Current View", self)
+        act_view_filter.setShortcut("Ctrl+F")
+        act_view_filter.triggered.connect(self._action_focus_filter)
+        view_menu.addAction(act_view_filter)
 
         view_menu.addSeparator()
 
@@ -266,6 +293,11 @@ class ZiPackMainWindow(QMainWindow):
         self.act_forward.triggered.connect(self._action_forward)
         tb.addAction(self.act_forward)
 
+        self.act_up = QAction(IconEngine.get_icon("up", 20), "Up", self)
+        self.act_up.setToolTip("Go up one level (Backspace)")
+        self.act_up.triggered.connect(self._action_up)
+        tb.addAction(self.act_up)
+
         tb.addSeparator()
 
         # Core Archive Commands
@@ -297,6 +329,11 @@ class ZiPackMainWindow(QMainWindow):
         tb.addSeparator()
 
         # Pro Tools Quick Bar
+        act_sanitize = QAction(IconEngine.get_icon("sanitizer", 20), "Sanitize", self)
+        act_sanitize.setToolTip("Purge bloat & smart-extract archive")
+        act_sanitize.triggered.connect(self._action_sanitizer)
+        tb.addAction(act_sanitize)
+
         act_repair = QAction(IconEngine.get_icon("repair", 20), "Repair", self)
         act_repair.setToolTip("Salvage and repair damaged archive (Alt+R)")
         act_repair.triggered.connect(self._action_repair)
@@ -312,6 +349,11 @@ class ZiPackMainWindow(QMainWindow):
         act_chart.triggered.connect(self._action_chart)
         tb.addAction(act_chart)
 
+        act_share = QAction(IconEngine.get_icon("share", 20), "Share", self)
+        act_share.setToolTip("Instant LAN QR Share")
+        act_share.triggered.connect(self._action_lan_share)
+        tb.addAction(act_share)
+
         tb.addSeparator()
 
         act_refresh = QAction(IconEngine.get_icon("refresh", 20), "Refresh", self)
@@ -326,10 +368,53 @@ class ZiPackMainWindow(QMainWindow):
     def add_tab(self, folder_or_archive: str) -> int:
         tab = ArchiveTabPage(folder_or_archive, parent=self)
         tab.files_dropped.connect(self._handle_files_dropped)
-        title = os.path.basename(folder_or_archive) or "Home"
-        idx = self.tabs.addTab(tab, title)
+        tab.navigation_changed.connect(lambda p, is_arc, t=tab: self._on_tab_navigated(t, p, is_arc))
+        tab.selection_changed.connect(self._sync_window_state)
+        tab.item_activated.connect(lambda _: tab.show_quicklook_for_selection())
+        title = os.path.basename(folder_or_archive) or folder_or_archive or "Home"
+        is_arc = os.path.isfile(folder_or_archive)
+        icon = IconEngine.get_icon("archive" if is_arc else "folder", 16)
+        idx = self.tabs.addTab(tab, icon, title)
         self.tabs.setCurrentIndex(idx)
+        self._sync_window_state()
         return idx
+
+    def _on_tab_navigated(self, tab: ArchiveTabPage, path: str, is_archive: bool):
+        idx = self.tabs.indexOf(tab)
+        if idx >= 0:
+            title = os.path.basename(path) or path or "Home"
+            self.tabs.setTabText(idx, title)
+            self.tabs.setTabIcon(idx, IconEngine.get_icon("archive" if is_archive else "folder", 16))
+        if tab is self.current_tab:
+            self._sync_window_state()
+
+    def _sync_window_state(self):
+        tab = self.current_tab
+        if not tab:
+            return
+        if hasattr(self, "act_back"):
+            self.act_back.setEnabled(tab.can_go_back())
+        if hasattr(self, "act_forward"):
+            self.act_forward.setEnabled(tab.can_go_forward())
+
+        total = len(tab.items)
+        selected_rows = sorted(set(idx.row() for idx in tab.table.selectedIndexes()))
+        if selected_rows:
+            sel_size = 0
+            for r in selected_rows:
+                if 0 <= r < len(tab.items):
+                    sel_size += tab.items[r].size
+            count_text = f"{total} items • {len(selected_rows)} selected ({format_size(sel_size)})"
+        else:
+            count_text = f"{total} items"
+
+        if hasattr(self, "lbl_status_count"):
+            self.lbl_status_count.setText(count_text)
+        if hasattr(self, "lbl_status_mode"):
+            self.lbl_status_mode.setText("Archive" if tab.current_archive_path else "Folder")
+        if hasattr(self, "statusBar"):
+            loc = tab.current_archive_path or tab.current_folder_path
+            self.statusBar().showMessage(loc)
 
     def dragEnterEvent(self, event: QDragEnterEvent):
         if event.mimeData().hasUrls():
@@ -368,9 +453,10 @@ class ZiPackMainWindow(QMainWindow):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             if ret == QMessageBox.StandardButton.Yes:
-                ok, msg = self.current_tab.engine.create_archive(archive_path, paths)
+                pwd = self.current_tab.session_passwords.get(archive_path)
+                ok, msg = self.current_tab.engine.add_to_archive(archive_path, paths, password=pwd)
                 if ok:
-                    self.current_tab.open_archive(archive_path)
+                    self.current_tab.open_archive(archive_path, record_history=False)
                 else:
                     QMessageBox.critical(self, "Add Failed", f"Could not add items to archive:\n{msg}")
             return
@@ -429,10 +515,22 @@ class ZiPackMainWindow(QMainWindow):
     def _action_back(self):
         if self.current_tab:
             self.current_tab.go_back()
+            self._sync_window_state()
 
     def _action_forward(self):
         if self.current_tab:
             self.current_tab.go_forward()
+            self._sync_window_state()
+
+    def _action_up(self):
+        if self.current_tab:
+            self.current_tab.go_up()
+            self._sync_window_state()
+
+    def _action_focus_filter(self):
+        if self.current_tab and hasattr(self.current_tab, "filter_input"):
+            self.current_tab.filter_input.setFocus()
+            self.current_tab.filter_input.selectAll()
 
     def _action_add(self):
         files_to_add = []
@@ -529,7 +627,7 @@ class ZiPackMainWindow(QMainWindow):
                 QMessageBox.information(self, "Extraction Complete", f"Successfully extracted archive to:\n{dest_dir}")
                 if dlg.should_open_folder():
                     import subprocess
-                    subprocess.Popen(f'explorer "{os.path.normpath(dest_dir)}"')
+                    subprocess.Popen(["explorer", os.path.normpath(dest_dir)])
                 if self.current_tab and not self.current_tab.current_archive_path:
                     self.current_tab.load_directory(self.current_tab.current_folder_path)
             else:
@@ -622,7 +720,21 @@ class ZiPackMainWindow(QMainWindow):
     def _action_metadata(self):
         from .dialog_metadata import MetadataInspectorDialog
         name = self.current_tab.current_archive_path if self.current_tab else "Archive"
-        dlg = MetadataInspectorDialog(self, file_name=name, raw_data=b"ZiPack Metadata Payload")
+        raw_data = b""
+        if self.current_tab:
+            selected = self.current_tab.table.selectedItems()
+            if selected:
+                row = selected[0].row()
+                item = self.current_tab.table.item(row, 0)
+                if item:
+                    raw_data, name = self.current_tab._get_selected_member_bytes(item.text().rstrip("/"))
+            elif self.current_tab.current_archive_path and os.path.isfile(self.current_tab.current_archive_path):
+                try:
+                    with open(self.current_tab.current_archive_path, "rb") as f:
+                        raw_data = f.read(1024 * 128)
+                except Exception:
+                    pass
+        dlg = MetadataInspectorDialog(self, file_name=name or "Archive", raw_data=raw_data)
         dlg.exec()
 
     def _action_vault(self):
@@ -661,8 +773,9 @@ class ZiPackMainWindow(QMainWindow):
 
     def _action_duplicates(self):
         from .dialog_duplicates import DuplicateAnalyzerDialog
-        folder = self.current_tab.current_folder_path if self.current_tab else os.getcwd()
-        dlg = DuplicateAnalyzerDialog(self, initial_folder=folder)
+        items = self.current_tab.items if self.current_tab else []
+        title = os.path.basename(self.current_tab.current_archive_path or self.current_tab.current_folder_path) if self.current_tab else "Workspace"
+        dlg = DuplicateAnalyzerDialog(self, archive_items=items, title=title)
         dlg.exec()
 
     def _action_steganography(self):

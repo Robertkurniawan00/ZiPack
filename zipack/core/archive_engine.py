@@ -7,6 +7,9 @@ import subprocess
 import zipfile
 import json
 from typing import List, Tuple, Optional
+from .utils import is_safe_path
+
+_NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
 
 
 class ArchiveItem:
@@ -94,7 +97,7 @@ class ArchiveEngine:
             cmd = [self.seven_zip_bin, "l", "-slt", archive_path]
             if password:
                 cmd.append(f"-p{password}")
-            proc = subprocess.run(cmd, capture_output=True, text=True, errors="ignore")
+            proc = subprocess.run(cmd, capture_output=True, text=True, errors="ignore", creationflags=_NO_WINDOW)
             if proc.returncode == 0:
                 def safe_int(v, default=0):
                     if not v:
@@ -174,10 +177,44 @@ class ArchiveEngine:
                     cmd.append("-mhe=on")  # Encrypt file names in 7z
             cmd.append("-y")
             cmd.extend(files_to_add)
-            proc = subprocess.run(cmd, capture_output=True, text=True)
+            proc = subprocess.run(cmd, capture_output=True, text=True, creationflags=_NO_WINDOW)
             if proc.returncode == 0:
                 return True, f"Successfully created {output_archive}"
             return False, proc.stderr.strip() or "Compression failed"
+        except Exception as e:
+            return False, str(e)
+
+    def add_to_archive(self, archive_path: str, files_to_add: List[str],
+                       password: Optional[str] = None) -> Tuple[bool, str]:
+        """Appends files/folders into an existing archive without overwriting it."""
+        if not os.path.isfile(archive_path):
+            fmt = os.path.splitext(archive_path)[1].lstrip(".") or "zip"
+            return self.create_archive(archive_path, files_to_add, archive_format=fmt, password=password)
+
+        if zipfile.is_zipfile(archive_path) and not password:
+            try:
+                with zipfile.ZipFile(archive_path, "a", compression=zipfile.ZIP_DEFLATED) as zf:
+                    for item in files_to_add:
+                        if os.path.isfile(item):
+                            zf.write(item, arcname=os.path.basename(item))
+                        elif os.path.isdir(item):
+                            for root, _, files in os.walk(item):
+                                for f in files:
+                                    fp = os.path.join(root, f)
+                                    zf.write(fp, arcname=os.path.relpath(fp, os.path.dirname(item)))
+                return True, f"Successfully added items to {archive_path}"
+            except Exception as e:
+                return False, str(e)
+
+        try:
+            cmd = [self.seven_zip_bin, "a", archive_path, "-y"]
+            if password:
+                cmd.append(f"-p{password}")
+            cmd.extend(files_to_add)
+            proc = subprocess.run(cmd, capture_output=True, text=True, creationflags=_NO_WINDOW)
+            if proc.returncode == 0:
+                return True, f"Successfully added items to {archive_path}"
+            return False, proc.stderr.strip() or "Failed to add items"
         except Exception as e:
             return False, str(e)
 
@@ -188,11 +225,12 @@ class ArchiveEngine:
         if zipfile.is_zipfile(archive_path) and not password:
             try:
                 with zipfile.ZipFile(archive_path, "r") as zf:
-                    if items:
-                        for it in items:
-                            zf.extract(it, destination_dir)
-                    else:
-                        zf.extractall(destination_dir)
+                    targets = items if items else zf.namelist()
+                    for member in targets:
+                        if not is_safe_path(destination_dir, member):
+                            return False, f"Security blocked path traversal (Zip Slip): {member}"
+                    for member in targets:
+                        zf.extract(member, destination_dir)
                 return True, f"Extracted to {destination_dir}"
             except Exception as e:
                 return False, str(e)
@@ -204,12 +242,52 @@ class ArchiveEngine:
                 cmd.append(f"-p{password}")
             if items:
                 cmd.extend(items)
-            proc = subprocess.run(cmd, capture_output=True, text=True)
+            proc = subprocess.run(cmd, capture_output=True, text=True, creationflags=_NO_WINDOW)
             if proc.returncode == 0:
                 return True, f"Extracted to {destination_dir}"
             return False, proc.stderr.strip() or "Extraction failed"
         except Exception as e:
             return False, str(e)
+
+    def read_member_bytes(self, archive_path: str, member_path: str,
+                          password: Optional[str] = None, max_bytes: int = 1024 * 512) -> bytes:
+        """Reads up to max_bytes of a single member from an archive for preview/inspection."""
+        if not os.path.isfile(archive_path) or not member_path:
+            return b""
+
+        clean_member = member_path.replace("\\", "/").lstrip("/")
+        if zipfile.is_zipfile(archive_path):
+            try:
+                with zipfile.ZipFile(archive_path, "r") as zf:
+                    if password:
+                        zf.setpassword(password.encode("utf-8"))
+                    # Match exact path or basename fallback
+                    target_name = None
+                    names = zf.namelist()
+                    if clean_member in names:
+                        target_name = clean_member
+                    else:
+                        for n in names:
+                            if n.rstrip("/") == clean_member.rstrip("/") or os.path.basename(n.rstrip("/")) == os.path.basename(clean_member.rstrip("/")):
+                                target_name = n
+                                break
+                    if target_name and not target_name.endswith("/"):
+                        with zf.open(target_name, "r") as mf:
+                            return mf.read(max_bytes)
+            except Exception:
+                pass
+
+        # 7z CLI stdout extraction fallback
+        try:
+            cmd = [self.seven_zip_bin, "x", "-so", archive_path, clean_member]
+            if password:
+                cmd.append(f"-p{password}")
+            proc = subprocess.run(cmd, capture_output=True, creationflags=_NO_WINDOW)
+            if proc.returncode == 0 and proc.stdout:
+                return proc.stdout[:max_bytes]
+        except Exception:
+            pass
+        return b""
 
     def delete_items_from_archive(self, archive_path: str, items_to_delete: List[str]) -> Tuple[bool, str]:
         if not os.path.isfile(archive_path):
@@ -229,7 +307,14 @@ class ArchiveEngine:
             except Exception as e:
                 return False, str(e)
 
-        return False, "Unsupported archive format for deletion"
+        try:
+            cmd = [self.seven_zip_bin, "d", archive_path, "-y"] + list(items_to_delete)
+            proc = subprocess.run(cmd, capture_output=True, text=True, creationflags=_NO_WINDOW)
+            if proc.returncode == 0:
+                return True, "Items deleted successfully"
+            return False, proc.stderr.strip() or "Unsupported archive format for deletion"
+        except Exception as e:
+            return False, str(e)
 
     def set_comment(self, archive_path: str, comment: str) -> Tuple[bool, str]:
         if zipfile.is_zipfile(archive_path):
@@ -290,7 +375,7 @@ class ArchiveEngine:
         try:
             if self.seven_zip_bin:
                 cmd = [self.seven_zip_bin, "t", archive_path, f"-p{password}", "-y"]
-                res = subprocess.run(cmd, capture_output=True, text=True)
+                res = subprocess.run(cmd, capture_output=True, text=True, creationflags=_NO_WINDOW)
                 return res.returncode == 0
         except Exception:
             pass
